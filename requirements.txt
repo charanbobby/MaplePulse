@@ -1,0 +1,21 @@
+# MaplePulse — experiment/notebook dependencies
+
+# LLM orchestration (OpenRouter via OpenAI-compatible API)
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+langgraph>=0.2.0
+
+# Config
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# Observability (Langfuse — swap BASE_URL for self-hosted later)
+langfuse>=2.0.0
+
+# Notebook
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Data
+pandas>=2.0.0

@@ -9,7 +9,15 @@
 
 A web app where users paste a product concept, ad copy, survey question, or policy proposal — and get instant feedback from a demographically representative panel of synthetic Canadians.
 
-**Core value proposition**: Fast, cheap, directional insight from 5,000 AI personas grounded in Statistics Canada 2021 Census data. Not a replacement for real research — a sharpening tool before you invest in it.
+**Core value proposition**: Fast, cheap, directional insight from 5,000 AI personas grounded in multiple Canadian data sources. Not a replacement for real research — a sharpening tool before you invest in it.
+
+**Data sources powering personas**:
+- **Statistics Canada 2021 Census** — demographics, population, income, education, occupation, immigration, visible minorities, Indigenous identity, language, housing, commute mode
+- **Canadian Election Study (CES) 2019/2021 + Angus Reid regional polling** — political leaning by province/age
+- **Census 2021 religion data** — religion by province with visible minority correlations
+- **Angus Reid, Environics, Confederation of Tomorrow surveys** — regional top concerns
+- **Census 2021 Journey to Work** — commute mode by urban/suburban/rural
+- See `docs/DataSources.md` for the full catalog of 30+ sources investigated
 
 ### Use cases (validated with 5-persona demo)
 
@@ -69,7 +77,7 @@ A web app where users paste a product concept, ad copy, survey question, or poli
 ### Phase 1: Persona Generation (DONE)
 > Status: Code-complete, ready to run
 
-- [x] Statistics Canada 2021 Census data as probability weights (13 categories)
+- [x] Multi-source Canadian data as probability weights (census demographics, CES/Angus Reid political data, Environics/Confederation of Tomorrow concerns, Journey to Work commute data)
 - [x] Persona generator script with stratified sampling across all provinces/territories
 - [x] 22 fields per persona (18 deterministic + 4 LLM-enriched)
 - [x] Async concurrent LLM enrichment with Anthropic tool calling

@@ -16,6 +16,13 @@ venv/
 scripts/test_*.json
 scripts/test_*.meta.json
 
+# Experiment outputs (large JSON results)
+data/experiments/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
 # OS
 .DS_Store
 Thumbs.db
@@ -26,3 +33,5 @@ Desktop.ini
 .idea/
 *.swp
 *.swo
+
+SamplePlan.pdf
