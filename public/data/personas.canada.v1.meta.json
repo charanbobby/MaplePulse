@@ -1,0 +1,30 @@
+{
+  "source": "Statistics Canada, 2021 Census of Population",
+  "generator": "scripts/generate_canada_personas.py",
+  "attribution": {
+    "demographics": "Statistics Canada, 2021 Census",
+    "original_project": "Aayush Mathur, Ask Singapore (https://github.com/AayushMathur7/ask-singapore)",
+    "persona_methodology": "Inspired by NVIDIA Nemotron-Personas approach"
+  },
+  "count": 5000,
+  "unique_provinces": 13,
+  "unique_regions": 60,
+  "seed": 42,
+  "skeleton_only": true,
+  "model": null,
+  "province_distribution": {
+    "Ontario": 1922,
+    "Alberta": 576,
+    "Quebec": 1148,
+    "British Columbia": 676,
+    "Saskatchewan": 153,
+    "Manitoba": 182,
+    "Nova Scotia": 131,
+    "New Brunswick": 105,
+    "Prince Edward Island": 21,
+    "Newfoundland and Labrador": 69,
+    "Northwest Territories": 6,
+    "Nunavut": 5,
+    "Yukon": 6
+  }
+}

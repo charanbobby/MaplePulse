@@ -1,0 +1,28 @@
+# Reference project (not ours to publish)
+ask-singapore/
+
+# Environment
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Test/scratch outputs
+scripts/test_*.json
+scripts/test_*.meta.json
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
