@@ -1,0 +1,940 @@
+[
+  {
+    "occupation": "Accountant",
+    "noc_code": "NOC_11100",
+    "noc_title": "Financial auditors and accountants",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Administrative Assistant",
+    "noc_code": "NOC_13110",
+    "noc_title": "Administrative assistants",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Agricultural Technician",
+    "noc_code": "NOC_22110",
+    "noc_title": "Biological technologists and technicians",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Architect",
+    "noc_code": "NOC_21200",
+    "noc_title": "Architects",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Assembly Line Worker",
+    "noc_code": "NOC_94219",
+    "noc_title": "Other products assemblers, finishers and inspectors",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Auto Mechanic",
+    "noc_code": "NOC_72410",
+    "noc_title": "Automotive service technicians, truck and bus mechanics and mechanical repairers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Band Chief",
+    "noc_code": "NOC_00010",
+    "noc_title": "Legislators",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Bartender",
+    "noc_code": "NOC_64301",
+    "noc_title": "Bartenders",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Biomedical Researcher",
+    "noc_code": "NOC_21110",
+    "noc_title": "Biologists and related scientists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Bookkeeper",
+    "noc_code": "NOC_12200",
+    "noc_title": "Accounting technicians and bookkeepers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Bus Driver",
+    "noc_code": "NOC_73301",
+    "noc_title": "Bus drivers, subway operators and other transit operators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Business Analyst",
+    "noc_code": "NOC_11201",
+    "noc_title": "Professional occupations in business management consulting",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "CEO",
+    "noc_code": "NOC_00012",
+    "noc_title": "Senior managers - financial, communications and other business services",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "CNC Machinist",
+    "noc_code": "NOC_72100",
+    "noc_title": "Machinists and machining and tooling inspectors",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Call Centre Agent",
+    "noc_code": "NOC_64409",
+    "noc_title": "Other customer and information services representatives",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Carpenter",
+    "noc_code": "NOC_72310",
+    "noc_title": "Carpenters",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Cashier",
+    "noc_code": "NOC_65100",
+    "noc_title": "Cashiers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Chef",
+    "noc_code": "NOC_62200",
+    "noc_title": "Chefs",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Chemical Engineer",
+    "noc_code": "NOC_21320",
+    "noc_title": "Chemical engineers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Chief Financial Officer",
+    "noc_code": "NOC_10010",
+    "noc_title": "Financial managers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Civil Engineer",
+    "noc_code": "NOC_21300",
+    "noc_title": "Civil engineers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "College Student",
+    "noc_code": "NOC_41401",
+    "noc_title": "Economists and economic policy researchers and analysts",
+    "confidence": "low",
+    "is_employed": false
+  },
+  {
+    "occupation": "Community Development Worker",
+    "noc_code": "NOC_42201",
+    "noc_title": "Social and community service workers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Compliance Officer",
+    "noc_code": "NOC_11201",
+    "noc_title": "Professional occupations in business management consulting",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Construction Labourer",
+    "noc_code": "NOC_75110",
+    "noc_title": "Construction trades helpers and labourers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Crane Operator",
+    "noc_code": "NOC_72500",
+    "noc_title": "Crane operators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Customer Service Representative",
+    "noc_code": "NOC_64409",
+    "noc_title": "Other customer and information services representatives",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Cybersecurity Analyst",
+    "noc_code": "NOC_21220",
+    "noc_title": "Cybersecurity specialists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Data Entry Clerk",
+    "noc_code": "NOC_14111",
+    "noc_title": "Data entry clerks",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Data Scientist",
+    "noc_code": "NOC_21211",
+    "noc_title": "Data scientists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Delivery Driver",
+    "noc_code": "NOC_75201",
+    "noc_title": "Delivery service drivers and door-to-door distributors",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Dental Hygienist",
+    "noc_code": "NOC_32111",
+    "noc_title": "Dental hygienists and dental therapists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Director of Operations",
+    "noc_code": "NOC_00012",
+    "noc_title": "Senior managers - financial, communications and other business services",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Early Childhood Educator",
+    "noc_code": "NOC_42202",
+    "noc_title": "Early childhood educators and assistants",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Electrician",
+    "noc_code": "NOC_72200",
+    "noc_title": "Electricians (except industrial and power system)",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Elementary School Teacher",
+    "noc_code": "NOC_41221",
+    "noc_title": "Elementary school and kindergarten teachers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Elevator Mechanic",
+    "noc_code": "NOC_72406",
+    "noc_title": "Elevator constructors and mechanics",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Environmental Scientist",
+    "noc_code": "NOC_21120",
+    "noc_title": "Public and environmental health and safety professionals",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Executive Assistant",
+    "noc_code": "NOC_12100",
+    "noc_title": "Executive assistants",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Executive Director (Non-profit)",
+    "noc_code": "NOC_00013",
+    "noc_title": "Senior managers - health, education, social and community services and membership organizations",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Family Physician",
+    "noc_code": "NOC_31102",
+    "noc_title": "General practitioners and family physicians",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Farm Manager",
+    "noc_code": "NOC_80020",
+    "noc_title": "Managers in agriculture",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Film Editor",
+    "noc_code": "NOC_51110",
+    "noc_title": "Editors",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Financial Analyst",
+    "noc_code": "NOC_11101",
+    "noc_title": "Financial and investment analysts",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Firefighter",
+    "noc_code": "NOC_42101",
+    "noc_title": "Firefighters",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Fisher",
+    "noc_code": "NOC_83121",
+    "noc_title": "Fishermen/women",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Fitness Instructor",
+    "noc_code": "NOC_54100",
+    "noc_title": "Program leaders and instructors in recreation, sport and fitness",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Food Service Supervisor",
+    "noc_code": "NOC_62020",
+    "noc_title": "Food service supervisors",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Forestry Technician",
+    "noc_code": "NOC_22112",
+    "noc_title": "Forestry technologists and technicians",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "General Manager",
+    "noc_code": "NOC_00014",
+    "noc_title": "Senior managers - trade, broadcasting and other services",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Geologist",
+    "noc_code": "NOC_21102",
+    "noc_title": "Geoscientists and oceanographers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Graphic Designer",
+    "noc_code": "NOC_52120",
+    "noc_title": "Graphic designers and illustrators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Greenhouse Worker",
+    "noc_code": "NOC_85103",
+    "noc_title": "Nursery and greenhouse labourers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Guidance Counsellor",
+    "noc_code": "NOC_41320",
+    "noc_title": "Educational counsellors",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "HVAC Technician",
+    "noc_code": "NOC_72402",
+    "noc_title": "Heating, refrigeration and air conditioning mechanics",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Hair Stylist",
+    "noc_code": "NOC_63210",
+    "noc_title": "Hairstylists and barbers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Heavy Equipment Operator",
+    "noc_code": "NOC_73400",
+    "noc_title": "Heavy equipment operators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "High School Teacher",
+    "noc_code": "NOC_41220",
+    "noc_title": "Secondary school teachers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Hospital Administrator",
+    "noc_code": "NOC_30010",
+    "noc_title": "Managers in health care",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Hotel Manager",
+    "noc_code": "NOC_60031",
+    "noc_title": "Accommodation service managers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Human Resources Manager",
+    "noc_code": "NOC_10011",
+    "noc_title": "Human resources managers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "IT Project Manager",
+    "noc_code": "NOC_20012",
+    "noc_title": "Computer and information systems managers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Immigration Consultant",
+    "noc_code": "NOC_11201",
+    "noc_title": "Professional occupations in business management consulting",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Industrial Mechanic",
+    "noc_code": "NOC_72400",
+    "noc_title": "Construction millwrights and industrial mechanics",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Insurance Broker",
+    "noc_code": "NOC_63100",
+    "noc_title": "Insurance agents and brokers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Insurance Underwriter",
+    "noc_code": "NOC_12202",
+    "noc_title": "Insurance underwriters",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Interior Designer",
+    "noc_code": "NOC_52121",
+    "noc_title": "Interior designers and interior decorators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Ironworker",
+    "noc_code": "NOC_72105",
+    "noc_title": "Ironworkers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Journalist",
+    "noc_code": "NOC_51113",
+    "noc_title": "Journalists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Landscaper",
+    "noc_code": "NOC_85121",
+    "noc_title": "Landscaping and grounds maintenance labourers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Lawyer",
+    "noc_code": "NOC_41101",
+    "noc_title": "Lawyers and Quebec notaries",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Librarian",
+    "noc_code": "NOC_51100",
+    "noc_title": "Librarians",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Machine Operator",
+    "noc_code": "NOC_94100",
+    "noc_title": "Machine operators, mineral and metal processing",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Mechanical Engineer",
+    "noc_code": "NOC_21301",
+    "noc_title": "Mechanical engineers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Medical Laboratory Technologist",
+    "noc_code": "NOC_32120",
+    "noc_title": "Medical laboratory technologists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Midwife",
+    "noc_code": "NOC_31303",
+    "noc_title": "Physician assistants, midwives and allied health professionals",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Millwright",
+    "noc_code": "NOC_72400",
+    "noc_title": "Construction millwrights and industrial mechanics",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Mining Engineer",
+    "noc_code": "NOC_21330",
+    "noc_title": "Mining engineers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Municipal Councillor",
+    "noc_code": "NOC_00010",
+    "noc_title": "Legislators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Museum Curator",
+    "noc_code": "NOC_51101",
+    "noc_title": "Conservators and curators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Musician",
+    "noc_code": "NOC_51122",
+    "noc_title": "Musicians and singers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Network Administrator",
+    "noc_code": "NOC_22220",
+    "noc_title": "Computer network and web technicians",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Occupational Therapist",
+    "noc_code": "NOC_31203",
+    "noc_title": "Occupational therapists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Office Manager",
+    "noc_code": "NOC_13100",
+    "noc_title": "Administrative officers",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Oil and Gas Driller",
+    "noc_code": "NOC_83101",
+    "noc_title": "Oil and gas well drillers, servicers, testers and related workers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Optometrist",
+    "noc_code": "NOC_31111",
+    "noc_title": "Optometrists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Packaging Technician",
+    "noc_code": "NOC_94219",
+    "noc_title": "Other products assemblers, finishers and inspectors",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Paralegal",
+    "noc_code": "NOC_42200",
+    "noc_title": "Paralegals and related occupations",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Paramedic",
+    "noc_code": "NOC_32102",
+    "noc_title": "Paramedical occupations",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Park Ranger",
+    "noc_code": "NOC_22113",
+    "noc_title": "Conservation and fishery officers",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Payroll Administrator",
+    "noc_code": "NOC_13102",
+    "noc_title": "Payroll administrators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Person with disability (not working)",
+    "noc_code": "NOC_00010",
+    "noc_title": "Legislators",
+    "confidence": "low",
+    "is_employed": false
+  },
+  {
+    "occupation": "Personal Support Worker",
+    "noc_code": "NOC_44101",
+    "noc_title": "Home support workers, caregivers and related occupations",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Pharmacist",
+    "noc_code": "NOC_31120",
+    "noc_title": "Pharmacists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Photographer",
+    "noc_code": "NOC_53110",
+    "noc_title": "Photographers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Physiotherapist",
+    "noc_code": "NOC_31202",
+    "noc_title": "Physiotherapists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Plumber",
+    "noc_code": "NOC_72300",
+    "noc_title": "Plumbers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Police Officer",
+    "noc_code": "NOC_42100",
+    "noc_title": "Police officers (except commissioned)",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Power Plant Operator",
+    "noc_code": "NOC_92100",
+    "noc_title": "Power engineers and power systems operators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Probation Officer",
+    "noc_code": "NOC_41311",
+    "noc_title": "Probation and parole officers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Process Operator",
+    "noc_code": "NOC_93100",
+    "noc_title": "Central control and process operators, mineral and metal processing",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Professor",
+    "noc_code": "NOC_41200",
+    "noc_title": "University professors and lecturers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Psychologist",
+    "noc_code": "NOC_31200",
+    "noc_title": "Psychologists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Public Relations Specialist",
+    "noc_code": "NOC_11202",
+    "noc_title": "Professional occupations in advertising, marketing and public relations",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Purchasing Agent",
+    "noc_code": "NOC_12102",
+    "noc_title": "Procurement and purchasing agents and officers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Quality Control Inspector",
+    "noc_code": "NOC_94104",
+    "noc_title": "Inspectors and testers, mineral and metal processing",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Real Estate Agent",
+    "noc_code": "NOC_63101",
+    "noc_title": "Real estate agents and salespersons",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Recent Immigrant (settling in)",
+    "noc_code": "NOC_00010",
+    "noc_title": "Legislators",
+    "confidence": "medium",
+    "is_employed": false
+  },
+  {
+    "occupation": "Receptionist",
+    "noc_code": "NOC_14101",
+    "noc_title": "Receptionists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Recreation Program Coordinator",
+    "noc_code": "NOC_54100",
+    "noc_title": "Program leaders and instructors in recreation, sport and fitness",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Registered Nurse",
+    "noc_code": "NOC_31301",
+    "noc_title": "Registered nurses and registered psychiatric nurses",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Respiratory Therapist",
+    "noc_code": "NOC_32103",
+    "noc_title": "Respiratory therapists, clinical perfusionists and cardiopulmonary technologists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Restaurant Server",
+    "noc_code": "NOC_65200",
+    "noc_title": "Food and beverage servers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Retail Sales Associate",
+    "noc_code": "NOC_64100",
+    "noc_title": "Retail salespersons and visual merchandisers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Retired",
+    "noc_code": "NOC_00010",
+    "noc_title": "Legislators",
+    "confidence": "medium",
+    "is_employed": false
+  },
+  {
+    "occupation": "School Board Superintendent",
+    "noc_code": "NOC_00013",
+    "noc_title": "Senior managers - health, education, social and community services and membership organizations",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Security Guard",
+    "noc_code": "NOC_64410",
+    "noc_title": "Security guards and related security service occupations",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Social Worker",
+    "noc_code": "NOC_41300",
+    "noc_title": "Social workers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Software Developer",
+    "noc_code": "NOC_21232",
+    "noc_title": "Software developers and programmers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Stay-at-home Parent",
+    "noc_code": "NOC_00010",
+    "noc_title": "Legislators",
+    "confidence": "medium",
+    "is_employed": false
+  },
+  {
+    "occupation": "Store Manager",
+    "noc_code": "NOC_60020",
+    "noc_title": "Retail and wholesale trade managers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Surveyor",
+    "noc_code": "NOC_21203",
+    "noc_title": "Land surveyors",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Systems Analyst",
+    "noc_code": "NOC_21221",
+    "noc_title": "Business systems specialists",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Tax Preparer",
+    "noc_code": "NOC_12200",
+    "noc_title": "Accounting technicians and bookkeepers",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Translator",
+    "noc_code": "NOC_51114",
+    "noc_title": "Translators, terminologists and interpreters",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Travel Agent",
+    "noc_code": "NOC_64310",
+    "noc_title": "Travel counsellors",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Truck Driver",
+    "noc_code": "NOC_73300",
+    "noc_title": "Transport truck drivers",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "UX Designer",
+    "noc_code": "NOC_21233",
+    "noc_title": "Web designers",
+    "confidence": "medium",
+    "is_employed": true
+  },
+  {
+    "occupation": "Unemployed (seeking work)",
+    "noc_code": "NOC_00010",
+    "noc_title": "Legislators",
+    "confidence": "low",
+    "is_employed": false
+  },
+  {
+    "occupation": "University Student",
+    "noc_code": "NOC_41401",
+    "noc_title": "Economists and economic policy researchers and analysts",
+    "confidence": "low",
+    "is_employed": false
+  },
+  {
+    "occupation": "Veterinarian",
+    "noc_code": "NOC_31103",
+    "noc_title": "Veterinarians",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Vice President of Marketing",
+    "noc_code": "NOC_00012",
+    "noc_title": "Senior managers - financial, communications and other business services",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Water Treatment Technician",
+    "noc_code": "NOC_92101",
+    "noc_title": "Water and waste treatment plant operators",
+    "confidence": "high",
+    "is_employed": true
+  },
+  {
+    "occupation": "Welder",
+    "noc_code": "NOC_72106",
+    "noc_title": "Welders and related machine operators",
+    "confidence": "high",
+    "is_employed": true
+  }
+]

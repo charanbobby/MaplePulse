@@ -19,6 +19,13 @@ scripts/test_*.meta.json
 # Experiment outputs (large JSON results)
 data/experiments/
 
+# Large data files (generated, not source-controlled)
+data/personas_5000_enriched.json
+data/raw/
+
+# Notebook outputs
+experiments/01_output.ipynb
+
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb_checkpoints
