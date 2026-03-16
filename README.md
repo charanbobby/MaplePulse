@@ -163,7 +163,6 @@ Inspired by [Ask Singapore](https://github.com/AayushMathur7/ask-singapore) by A
   Key changes from v1:
     - Single LLM pretending to be 20 people  -->  20 independent subagents
     - One model (GPT-5-mini)                 -->  Multi-model (GPT-5-mini, Gemini 3 Flash, etc.)
-    - Simple aggregation                     -->  Dedicated Critic Agent reviews for bias
     - Workflow (fixed pipeline)              -->  Orchestrator with agency + delegation
 
 
@@ -184,9 +183,11 @@ Inspired by [Ask Singapore](https://github.com/AayushMathur7/ask-singapore) by A
   ║  - Select panel composition strategy                        ║
   ║  - Spawn persona subagents with model assignments           ║
   ║  - Collect raw reactions                                    ║
-  ║  - Hand off to Critic Agent for evaluation                  ║
-  ║  - Decide: optimize & re-run, or finalize                   ║
-  ║  - Compile final report for marketer                        ║
+  ║  - Aggregate results                                        ║
+  ║  - Generate optimized message                               ║
+  ║  - Spawn Round 2 subagents with optimized message           ║
+  ║  - Compile before/after comparison                          ║
+  ║  - Return final report to marketer                          ║
   ║                                                             ║
   ║  Model: GPT-5-mini (cheap, fast orchestration)              ║
   ║  Context: clean — delegates all persona work to subagents   ║
@@ -217,6 +218,7 @@ Inspired by [Ask Singapore](https://github.com/AayushMathur7/ask-singapore) by A
   │       ▼            ▼            ▼            ▼              │
   │   reaction     reaction     reaction     reaction           │
   │   + _meta      + _meta      + _meta      + _meta            │
+  │   + model_id   + model_id   + model_id   + model_id         │
   │                                                             │
   │  Why multi-model?                                           │
   │  - Different LLMs have different "personalities" & biases   │
@@ -227,72 +229,46 @@ Inspired by [Ask Singapore](https://github.com/AayushMathur7/ask-singapore) by A
                              │  raw reactions collected
                              ▼
   ┌══════════════════════════════════════════════════════════════┐
-  ║                     CRITIC AGENT                            ║
-  ║  (dedicated evaluator — quality gate before final output)   ║
-  ║                                                             ║
-  ║  Receives:                                                  ║
-  ║  - All raw reactions from subagents                         ║
-  ║  - Original marketing message                               ║
-  ║  - Panel demographics                                       ║
-  ║                                                             ║
-  ║  Checks for:                                                ║
-  ║  ┌─────────────────────────────────────────────────┐        ║
-  ║  │  BIAS DETECTION                                 │        ║
-  ║  │  - Are reactions suspiciously uniform?           │        ║
-  ║  │  - Positivity bias (all too nice)?              │        ║
-  ║  │  - Sycophancy (agreeing with the ad too much)?  │        ║
-  ║  │  - Model-specific patterns (GPT vs Gemini)?     │        ║
-  ║  ├─────────────────────────────────────────────────┤        ║
-  ║  │  CONSISTENCY CHECK                              │        ║
-  ║  │  - Does a 19yo student sound like a 19yo?       │        ║
-  ║  │  - Does a Quebec francophone mention French?    │        ║
-  ║  │  - Are income-sensitive reactions realistic?     │        ║
-  ║  ├─────────────────────────────────────────────────┤        ║
-  ║  │  OUTLIER FLAGGING                               │        ║
-  ║  │  - Flag reactions that contradict their persona  │        ║
-  ║  │  - Flag identical/near-duplicate responses       │        ║
-  ║  │  - Flag hallucinated store names / brands        │        ║
-  ║  └─────────────────────────────────────────────────┘        ║
-  ║                                                             ║
-  ║  Outputs:                                                   ║
-  ║  - Validated reactions (flagged or approved)                 ║
-  ║  - Bias report (model-level & panel-level)                  ║
-  ║  - Confidence score for the overall focus group run          ║
-  ║  - Recommendations: re-run flagged personas? adjust panel?   ║
-  ║                                                             ║
-  ║  Model: GPT-5-mini (or stronger model for critical eval)    ║
-  ╚═══════════════════════════╤═════════════════════════════════╝
-                              │
-                              │  validated reactions
-                              ▼
-  ┌══════════════════════════════════════════════════════════════┐
   ║                   ORCHESTRATOR AGENT                        ║
-  ║                   (decision point)                          ║
+  ║                   (aggregation + optimization)              ║
   ║                                                             ║
-  ║  IF critic flagged issues:                                  ║
-  ║    -> Re-spawn flagged persona subagents (different model)  ║
-  ║    -> Re-submit to Critic                                   ║
+  ║  1. Aggregate Round 1 results                               ║
+  ║     - Display persona reactions (quotes)                    ║
+  ║     - Compute hidden metadata (sentiment, flags, tone)      ║
+  ║     - Track which model produced which reaction             ║
   ║                                                             ║
-  ║  IF reactions are clean:                                    ║
-  ║    -> Aggregate results                                     ║
-  ║    -> Generate optimized message                            ║
-  ║    -> Spawn Round 2 subagents with optimized message        ║
-  ║    -> Critic validates Round 2                              ║
-  ║    -> Compile before/after comparison                       ║
-  ║    -> Return final report to marketer                       ║
+  ║  2. Generate optimized message                              ║
+  ║     - Feed original + reactions + metadata to LLM           ║
+  ║     - Produce rewritten message + list of changes           ║
+  ║                                                             ║
+  ║  3. Spawn Round 2 subagents                                 ║
+  ║     - SAME panel, SAME model assignments                    ║
+  ║     - OPTIMIZED message as input                            ║
+  ║                                                             ║
+  ║  4. Aggregate Round 2 + before/after comparison             ║
   ╚═══════════════════════════╤═════════════════════════════════╝
                               │
                               ▼
   ┌─────────────────────────────────────────────────────────────┐
   │                    MARKETER RECEIVES                        │
   │                                                             │
-  │  Everything from v1, PLUS:                                  │
-  │  - Bias report from Critic Agent                            │
-  │  - Confidence score for the run                             │
-  │  - Model diversity breakdown (which LLM said what)          │
-  │  - Flagged/re-run reactions marked                          │
-  │  - Richer before/after with critic commentary               │
+  │  ● Original message + optimized message                     │
+  │  ● List of changes made                                     │
+  │  ● 40 persona reactions (20 per round)                      │
+  │  ● Before/after comparison table                            │
+  │  ● Model diversity breakdown (which LLM said what)          │
+  │  ● Cultural flags & regional issues                         │
   └─────────────────────────────────────────────────────────────┘
+
+
+  FUTURE: CRITIC AGENT (on hold)
+  ═══════════════════════════════
+  When needed (100+ persona panels, paying customers, trust signals):
+  - Dedicated evaluator agent between subagents and aggregation
+  - Checks for: positivity bias, sycophancy, persona inconsistency,
+    duplicate responses, hallucinated brands, model-specific patterns
+  - Outputs: confidence score, bias report, flagged reactions
+  - Can trigger re-runs of flagged personas on a different model
 
 
   ARCHITECTURE COMPARISON
@@ -300,13 +276,11 @@ Inspired by [Ask Singapore](https://github.com/AayushMathur7/ask-singapore) by A
 
   v1 (Current — Workflow)          v2 (Future — Hierarchical Multi-Agent)
   ─────────────────────────        ─────────────────────────────────────
-  Single LangGraph pipeline        Orchestrator + Subagents + Critic
+  Single LangGraph pipeline        Orchestrator + Subagents
   1 model per run                  Multiple models (GPT-5, Gemini 3, etc.)
   1 LLM call = 1 persona           1 subagent = 1 persona (isolated)
   All personas share context       Each subagent: clean context window
-  Simple aggregation               Critic validates before aggregation
-  Fixed 2-round loop               Orchestrator decides: re-run or finalize
-  No bias detection                Critic checks for sycophancy & uniformity
+  Fixed 2-round loop               Orchestrator decides flow
   ~20 concurrent calls             ~20 concurrent subagent spawns
   Same model = same blind spots    Model diversity = different perspectives
 ```
