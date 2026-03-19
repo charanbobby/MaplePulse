@@ -219,7 +219,24 @@ Beyond Statistics Canada 2021 Census data, the following sources can enrich pers
 
 ---
 
-## 7. Cost of Living & Economic Concerns
+## 7. Income & Wage Data (Actively Used)
+
+### Job Bank Canada — 2025 Wage Data
+- **What**: Wage data by NOC (National Occupational Classification) code and province. Includes median, low, high, Q1, Q3 wages. Both hourly and annual rates. Provincial and national level data.
+- **Signals**: Occupation-specific income by province, wage ranges, annual vs hourly classification
+- **Access**: FREE — downloaded as CSV
+- **File**: `data/raw/jobbank_wages_2025.csv`
+- **Status**: **ACTIVELY USED** — integrated into `scripts/generate_canada_personas.py` for income assignment
+- **Persona use**: `estimated_annual_income`, `income_bracket`, `income_source` fields. Age-adjusted within wage quartiles. Non-employed personas (retirees, students, unemployed) get estimated income from pensions, EI, etc.
+
+### Occupation → NOC Mapping
+- **What**: Custom mapping of 100+ occupation exemplars to NOC 5-digit codes
+- **File**: `data/occupation_noc_mapping.json`
+- **Status**: **ACTIVELY USED** — links persona occupations to Job Bank wage data
+
+---
+
+## 8. Cost of Living & Economic Concerns
 
 ### CMHC Housing Data
 - **What**: Comprehensive housing market data from neighbourhood to national level. Rental Market Survey with vacancy rates, average rents, turnover rates for all major centres.
@@ -390,6 +407,7 @@ Beyond Statistics Canada 2021 Census data, the following sources can enrich pers
 | Time use / hobbies | GSS Time Use, Outdoor Activities | Yes |
 | Spending patterns | SHS | Yes |
 | Commute / transport | Census, LFS | Yes |
+| **Income (occupation-based)** | **Job Bank 2025 wages + NOC mapping** | **Yes — actively used** |
 | Religious affiliation | Census 2021 | Yes |
 | Dietary habits | CCHS Nutrition | Yes |
 | Disability | CSD | Yes |

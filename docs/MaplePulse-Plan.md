@@ -79,16 +79,17 @@ A web app where users paste a product concept, ad copy, survey question, or poli
 
 - [x] Multi-source Canadian data as probability weights (census demographics, CES/Angus Reid political data, Environics/Confederation of Tomorrow concerns, Journey to Work commute data)
 - [x] Persona generator script with stratified sampling across all provinces/territories
-- [x] 22 fields per persona (18 deterministic + 4 LLM-enriched)
+- [x] 25 fields per persona (21 deterministic + 4 LLM-enriched)
 - [x] Async concurrent LLM enrichment with Anthropic tool calling
 - [x] Additional signals: political leaning, religion, top concerns, commute mode
+- [x] Income integration: estimated_annual_income, income_bracket, income_source — powered by Job Bank 2025 wage data + NOC occupation mapping, with age-adjusted estimates for non-employed personas (retirees, students, etc.)
 - [ ] **Generate full 5,000 personas with LLM enrichment** (using Claude Code, not API key)
 
 ### Phase 2: Backend — Query Engine
 > The brain of MaplePulse: select personas, prompt them, aggregate results
 
 - [ ] **2a. Persona store** — load 5,000 personas into memory, index by province/age/occupation/etc.
-- [ ] **2b. Sampling engine** — given user's segment filters, select N representative personas (default: 100-500)
+- [ ] **2b. Sampling engine** — given user's segment filters (province, age, income bracket, occupation, etc.), select N representative personas (default: 100-500). Future: dynamic panel generation where marketers specify criteria (e.g. "$150K+ earners only") and personas are generated on-the-fly matching those constraints.
 - [ ] **2c. Prompt builder** — take user's concept + persona profile → build per-persona evaluation prompt
 - [ ] **2d. LLM fan-out** — send prompts concurrently (batches of 10-20), collect structured responses
 - [ ] **2e. Aggregation engine** — sentiment scoring, regional grouping, quote extraction, blind spot detection
@@ -97,16 +98,19 @@ A web app where users paste a product concept, ad copy, survey question, or poli
 ### Phase 3: Frontend — User Interface
 > Clean, simple UI: paste your concept, pick segments, get results
 
-- [ ] **3a. Input panel** — text area for concept/copy/question + mode selector (concept test / A/B test / survey pre-test / localization)
-- [ ] **3b. Segment picker** — filter by province, age range, income, occupation, political leaning (optional, default = "Representative Canada")
-- [ ] **3c. Results dashboard**:
-  - Sentiment pie chart (positive / neutral / negative / irrelevant)
-  - Regional heat map (Canada map showing where concept lands well vs. poorly)
-  - Representative quotes (5-10 persona reactions with demographics shown)
-  - Blind spots panel (demographics the concept misses or alienates)
-  - Actionable recommendations (2-3 AI-generated bullets)
-- [ ] **3d. A/B comparison view** — side-by-side when testing multiple copies
-- [ ] **3e. Export** — PDF report or CSV of raw responses
+- [x] **3a. Input panel** — text area for message + example prompts + panel filter controls (province, panel size)
+- [x] **3b. Segment picker** — filter by province and panel size (6-20 personas)
+- [x] **3c. Results dashboard**:
+  - Sentiment distribution bar (positive / neutral / negative)
+  - Tone fit distribution (perfect / acceptable / off / offensive)
+  - Cultural flags panel with specific issues raised
+  - Per-persona reaction cards with demographics, sentiment score, tone badge, model attribution
+  - Before/after optimization comparison with changes list
+  - Final comparison dashboard with delta metrics
+- [x] **3d. 8-step workflow** — Input → Panel → Round 1 → Summary → Optimize → Round 2 → Summary → Final
+- [ ] **3e. Connect to backend** — replace mock data with live LangGraph API calls
+- [ ] **3f. A/B comparison view** — side-by-side when testing multiple copies
+- [ ] **3g. Export** — PDF report or CSV of raw responses
 
 ### Phase 4: Data & Geography
 > Canadian map and regional context
@@ -130,10 +134,11 @@ A web app where users paste a product concept, ad copy, survey question, or poli
 
 | Decision | Options | Notes |
 |----------|---------|-------|
-| Frontend framework | Next.js (reuse ask-singapore patterns) vs. standalone | Next.js is the obvious choice |
-| LLM for runtime queries | Claude via Claude Code / API, Gemini, OpenAI | User is on Claude Max — explore options |
+| Frontend framework | **Next.js 15** (chosen) | TypeScript + Tailwind CSS v4 + Lucide icons |
+| Design system | **UI/UX Pro Max** (chosen) | Data-Dense Dashboard style, Fira Code/Fira Sans, blue+amber palette |
+| LLM for runtime queries | OpenRouter (multi-model) | gpt-5-nano, gemini-3-flash, deepseek-v3.2, mistral-small, grok-3-mini |
 | Database | None (static JSON) vs. Convex vs. Supabase | Start with static JSON, add persistence later |
-| Personas per query | 50 / 100 / 500 | Trade-off: speed vs. representativeness |
+| Personas per query | 6-20 (configurable) | Trade-off: speed vs. representativeness |
 | Hosting | Vercel, Railway, self-hosted | Vercel is simplest for Next.js |
 | Auth | None (public) vs. simple auth | Start public, add auth if needed |
 
@@ -145,13 +150,19 @@ A web app where users paste a product concept, ad copy, survey question, or poli
 |-------|--------|----------|
 | Census demographic weights (13 categories) | Done | `canada_demographics_2021.py` |
 | Persona generator (skeleton + LLM enrichment) | Done | `scripts/generate_canada_personas.py` |
-| 5 test enriched personas | Done | `scripts/test_enriched.json` |
+| Income enrichment (Job Bank 2025 + NOC mapping) | Done | Integrated into generator — `estimated_annual_income`, `income_bracket`, `income_source` |
+| Income enrichment data files | Done | `data/occupation_noc_mapping.json`, `data/raw/jobbank_wages_2025.csv` |
+| 5,000 skeleton personas | Done | `data/personas_5000.json` (needs regeneration to include income fields) |
+| LangGraph focus group pipeline | Done | `experiments/01_focus_group_test.ipynb` — classify → panel → react → optimize → react v2 → compare |
 | 30+ data source catalog | Done | `docs/DataSources.md` |
 | Ask Singapore reference codebase | Cloned | `ask-singapore/` |
 | Architecture knowledge | Documented | `docs/Learning.md` |
+| Frontend workflow UI | Done | `frontend/` — Next.js 15, 8-step animated workflow with mock data |
+| UI/UX design system | Done | `skills/ui-ux-pro-max/` — Data-Dense Dashboard style |
+| Docker Compose (frontend + notebook) | Done | `docker-compose.yml` — frontend on :3000, notebook on :8888 |
 
 ---
 
 ## Immediate Next Step
 
-**Generate the full 5,000 personas.** Everything else depends on having the persona pool. This will be done through Claude Code (no API key needed — user is on Claude Max plan).
+**Connect the frontend to the LangGraph backend.** The frontend workflow UI is complete with mock data. Next: expose the LangGraph pipeline as an API, wire up the frontend API route to call it, and replace mock data with live persona reactions. Also: regenerate `data/personas_5000.json` with income fields baked in.

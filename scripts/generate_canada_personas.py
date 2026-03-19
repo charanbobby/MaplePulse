@@ -35,8 +35,11 @@ import sys
 import uuid
 from pathlib import Path
 
+import pandas as pd
+
 # Add parent directory to path so we can import the demographics module
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 from canada_demographics_2021 import (
     ADULT_AGE_WEIGHTS,
     CMA_POPULATION,
@@ -284,6 +287,175 @@ COMMUTE_WEIGHTS_SUBURBAN: dict[str, float] = {
 COMMUTE_WEIGHTS_RURAL: dict[str, float] = {
     "drives": 0.85, "walks": 0.04, "works from home": 0.09, "other": 0.02,
 }
+
+# ---------------------------------------------------------------------------
+# Income data — NOC mapping + Job Bank 2025 wages
+# ---------------------------------------------------------------------------
+_noc_mapping_path = ROOT / "data/occupation_noc_mapping.json"
+_wages_path = ROOT / "data/raw/jobbank_wages_2025.csv"
+
+if _noc_mapping_path.exists() and _wages_path.exists():
+    with open(_noc_mapping_path, encoding="utf-8") as _f:
+        _noc_mapping_list = json.load(_f)
+    NOC_MAP: dict[str, dict] = {m["occupation"]: m for m in _noc_mapping_list}
+
+    WAGES_DF = pd.read_csv(_wages_path, dtype=str)
+
+    PROVINCE_ABBREV = {
+        "Ontario": "ON", "Quebec": "QC", "British Columbia": "BC",
+        "Alberta": "AB", "Manitoba": "MB", "Saskatchewan": "SK",
+        "Nova Scotia": "NS", "New Brunswick": "NB",
+        "Newfoundland and Labrador": "NL", "Prince Edward Island": "PEI",
+        "Northwest Territories": "NWT", "Yukon": "YK", "Nunavut": "NU",
+    }
+    _INCOME_DATA_AVAILABLE = True
+else:
+    NOC_MAP = {}
+    WAGES_DF = None
+    PROVINCE_ABBREV = {}
+    _INCOME_DATA_AVAILABLE = False
+
+
+def _get_wage(noc_code: str, province: str) -> dict | None:
+    """Look up wage data for a NOC code + province. Falls back to national."""
+    if WAGES_DF is None:
+        return None
+    prov_abbrev = PROVINCE_ABBREV.get(province, "")
+
+    mask = (WAGES_DF["NOC_CNP"] == noc_code) & (WAGES_DF["prov"] == prov_abbrev)
+    prov_rows = WAGES_DF[mask].dropna(subset=["Median_Wage_Salaire_Median"])
+    if not prov_rows.empty:
+        row = prov_rows.iloc[0]
+    else:
+        mask_nat = (WAGES_DF["NOC_CNP"] == noc_code) & (WAGES_DF["prov"] == "NAT")
+        nat_rows = WAGES_DF[mask_nat].dropna(subset=["Median_Wage_Salaire_Median"])
+        if nat_rows.empty:
+            return None
+        row = nat_rows.iloc[0]
+
+    is_annual = str(row.get("Annual_Wage_Flag_Salaire_annuel", "0")) == "1"
+
+    def to_float(val):
+        try:
+            v = float(val)
+            if pd.isna(v):
+                return None
+            return v
+        except (ValueError, TypeError):
+            return None
+
+    median = to_float(row["Median_Wage_Salaire_Median"])
+    low = to_float(row["Low_Wage_Salaire_Minium"])
+    high = to_float(row["High_Wage_Salaire_Maximal"])
+    q1 = to_float(row["Quartile1_Wage_Salaire_Quartile1"])
+    q3 = to_float(row["Quartile3_Wage_Salaire_Quartile3"])
+
+    if median is None:
+        return None
+
+    if not is_annual:
+        median = round(median * 2000)
+        low = round(low * 2000) if low else None
+        high = round(high * 2000) if high else None
+        q1 = round(q1 * 2000) if q1 else None
+        q3 = round(q3 * 2000) if q3 else None
+
+    return {
+        "median_annual": int(median),
+        "low_annual": int(low) if low else None,
+        "high_annual": int(high) if high else None,
+        "q1_annual": int(q1) if q1 else None,
+        "q3_annual": int(q3) if q3 else None,
+    }
+
+
+def _assign_income_bracket(annual_income: int) -> str:
+    """Assign to a bracket for segmentation."""
+    if annual_income < 20000:
+        return "Under $20K"
+    elif annual_income < 40000:
+        return "$20K-$40K"
+    elif annual_income < 60000:
+        return "$40K-$60K"
+    elif annual_income < 80000:
+        return "$60K-$80K"
+    elif annual_income < 100000:
+        return "$80K-$100K"
+    elif annual_income < 150000:
+        return "$100K-$150K"
+    else:
+        return "$150K+"
+
+
+def _estimate_persona_income(wage_data: dict, age: int, rng: random.Random) -> int:
+    """Estimate annual income using age as career-stage proxy."""
+    median = wage_data["median_annual"]
+    low = wage_data.get("low_annual") or int(median * 0.6)
+    high = wage_data.get("high_annual") or int(median * 1.8)
+    q1 = wage_data.get("q1_annual") or int((low + median) / 2)
+    q3 = wage_data.get("q3_annual") or int((median + high) / 2)
+
+    def safe_randint(a, b):
+        a, b = int(a), int(b)
+        if a > b:
+            a, b = b, a
+        if a == b:
+            return a
+        return rng.randint(a, b)
+
+    if age < 25:
+        base = safe_randint(low, q1)
+    elif age < 35:
+        base = safe_randint(q1, median)
+    elif age < 50:
+        base = safe_randint(median, q3)
+    elif age < 65:
+        base = safe_randint(int(median * 0.9), q3)
+    else:
+        base = safe_randint(q1, median)
+
+    noise = rng.uniform(-0.05, 0.05)
+    return max(0, int(base * (1 + noise)))
+
+
+def _assign_income(occupation: str, age: int, province: str, rng: random.Random) -> dict:
+    """Assign income fields for a persona based on occupation and demographics."""
+    if not _INCOME_DATA_AVAILABLE:
+        return {"estimated_annual_income": None, "income_bracket": "Unknown", "income_source": "no_data_files"}
+
+    mapping = NOC_MAP.get(occupation)
+
+    if not mapping:
+        return {"estimated_annual_income": None, "income_bracket": "Unknown", "income_source": "no_noc_mapping"}
+
+    if not mapping["is_employed"]:
+        if occupation == "Retired":
+            pension = rng.randint(18000, 45000)
+            return {"estimated_annual_income": pension, "income_bracket": _assign_income_bracket(pension), "income_source": "estimated_pension"}
+        elif occupation in ("College Student", "University Student"):
+            income = rng.randint(5000, 25000)
+            return {"estimated_annual_income": income, "income_bracket": _assign_income_bracket(income), "income_source": "estimated_student"}
+        elif occupation == "Unemployed (seeking work)":
+            income = rng.randint(12000, 28000)
+            return {"estimated_annual_income": income, "income_bracket": _assign_income_bracket(income), "income_source": "estimated_ei"}
+        elif occupation == "Stay-at-home Parent":
+            return {"estimated_annual_income": 0, "income_bracket": "Under $20K", "income_source": "not_employed"}
+        elif occupation == "Person with disability (not working)":
+            income = rng.randint(10000, 22000)
+            return {"estimated_annual_income": income, "income_bracket": _assign_income_bracket(income), "income_source": "estimated_disability"}
+        elif occupation == "Recent Immigrant (settling in)":
+            income = rng.randint(8000, 30000)
+            return {"estimated_annual_income": income, "income_bracket": _assign_income_bracket(income), "income_source": "estimated_newcomer"}
+        else:
+            return {"estimated_annual_income": None, "income_bracket": "Unknown", "income_source": "not_employed"}
+
+    wage_data = _get_wage(mapping["noc_code"], province)
+    if wage_data:
+        income = _estimate_persona_income(wage_data, age, rng)
+        return {"estimated_annual_income": income, "income_bracket": _assign_income_bracket(income), "income_source": "jobbank_2025"}
+    else:
+        return {"estimated_annual_income": None, "income_bracket": "Unknown", "income_source": "no_wage_data"}
+
 
 FIRST_NATIONS_EXAMPLES = [
     "Cree", "Ojibwe", "Mi'kmaq", "Mohawk", "Dene", "Blackfoot",
@@ -558,6 +730,9 @@ def generate_skeleton_persona(rng: random.Random, province_override: str | None 
     else:
         commute_mode = weighted_choice(COMMUTE_WEIGHTS_SUBURBAN, rng)
 
+    # Income assignment from Job Bank wage data
+    income_data = _assign_income(occupation, age, province, rng)
+
     return {
         "uuid": str(uuid.uuid4()),
         "age": age,
@@ -577,6 +752,9 @@ def generate_skeleton_persona(rng: random.Random, province_override: str | None 
         "religion": religion,
         "top_concerns": top_concerns,
         "commute_mode": commute_mode,
+        "estimated_annual_income": income_data["estimated_annual_income"],
+        "income_bracket": income_data["income_bracket"],
+        "income_source": income_data["income_source"],
         # These will be filled by LLM enrichment
         "persona": "",
         "skills_and_expertise": "",
@@ -636,6 +814,7 @@ Demographic Profile:
 - Housing: {persona['housing']}
 - Political leaning: {persona['political_leaning']}
 - Religion: {persona['religion']}
+- Income bracket: {persona.get('income_bracket', 'Unknown')}
 - Top concerns: {concerns_str}
 - Commute: {persona['commute_mode']}
 

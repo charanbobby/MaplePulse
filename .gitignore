@@ -15,6 +15,11 @@ venv/
 # Test/scratch outputs
 scripts/test_*.json
 scripts/test_*.meta.json
+data/test_*.json
+data/test_*.meta.json
+
+# Generated metadata
+data/*.meta.json
 
 # Experiment outputs (large JSON results)
 data/experiments/
@@ -42,3 +47,11 @@ Desktop.ini
 *.swo
 
 SamplePlan.pdf
+
+# UI/UX Skill (cloned repo, not ours)
+skills/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
