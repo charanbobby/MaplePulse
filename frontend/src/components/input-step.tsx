@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { Send, SlidersHorizontal, X } from "lucide-react";
 import type { PanelFilters } from "@/lib/types";
 
@@ -14,40 +13,25 @@ const EXAMPLE_STATEMENTS = [
   "Experience the Canadian dream with our new line of sustainable outdoor gear.",
 ];
 
-/** Shape returned by /api/panel-options */
+/** Shape returned by /api/panel-options (subset we use) */
 interface PanelOptions {
   total_personas: number;
   age_range: { min: number; max: number } | null;
   province: string[];
   sex: string[];
   income_bracket: string[];
-  education_level: string[];
-  marital_status: string[];
-  immigration_status: string[];
-  indigenous_identity: string[];
-  visible_minority: string[];
   political_leaning: string[];
-  religion: string[];
-  commute_mode: string[];
-  housing_type: string[];
   languages: string[];
-  top_concerns: string[];
+  [key: string]: unknown; // backend sends more fields — we ignore them
 }
 
-/** Filter config for rendering */
+/** Filter config for rendering — curated for marketing relevance */
 const FILTER_FIELDS: { key: keyof PanelFilters; label: string; optionsKey: keyof PanelOptions }[] = [
   { key: "province", label: "Province", optionsKey: "province" },
   { key: "sex", label: "Sex", optionsKey: "sex" },
   { key: "income_bracket", label: "Income Bracket", optionsKey: "income_bracket" },
-  { key: "education_level", label: "Education", optionsKey: "education_level" },
+  { key: "languages", label: "Language", optionsKey: "languages" },
   { key: "political_leaning", label: "Political Leaning", optionsKey: "political_leaning" },
-  { key: "religion", label: "Religion", optionsKey: "religion" },
-  { key: "immigration_status", label: "Immigration Status", optionsKey: "immigration_status" },
-  { key: "visible_minority", label: "Visible Minority", optionsKey: "visible_minority" },
-  { key: "indigenous_identity", label: "Indigenous Identity", optionsKey: "indigenous_identity" },
-  { key: "housing_type", label: "Housing", optionsKey: "housing_type" },
-  { key: "commute_mode", label: "Commute", optionsKey: "commute_mode" },
-  { key: "languages", label: "Languages", optionsKey: "languages" },
 ];
 
 interface InputStepProps {
@@ -75,33 +59,29 @@ export function InputStep({ onSubmit }: InputStepProps) {
     onSubmit(message.trim(), filters);
   };
 
-  // Count active filters
-  const activeFilterCount = Object.entries(filters).filter(
-    ([k, v]) => k !== "panel_size" && v !== undefined && (!Array.isArray(v) || v.length > 0)
-  ).length;
+  // Count active filters (age_range counts if changed from full range)
+  const activeFilterCount = Object.entries(filters).filter(([k, v]) => {
+    if (k === "panel_size") return false;
+    if (v === undefined) return false;
+    if (k === "age_range" && options?.age_range) {
+      const [min, max] = v as [number, number];
+      return min !== options.age_range.min || max !== options.age_range.max;
+    }
+    return !Array.isArray(v) || v.length > 0;
+  }).length;
 
   const clearFilters = () => setFilters({ panel_size: filters.panel_size });
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="text-center space-y-4">
-        <Image
-          src="/logo-full.png"
-          alt="MaplePulse — Synthetic Focus Group for Canada"
-          width={1408}
-          height={768}
-          className="mx-auto h-24 w-auto object-contain"
-          priority
-        />
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
-            Test Your Message
-          </h2>
-          <p className="text-[var(--color-text-muted)]">
-            Enter a marketing statement, policy message, or product pitch. Our
-            panel of AI-powered Canadian personas will react to it.
-          </p>
-        </div>
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
+          Test Your Message
+        </h2>
+        <p className="text-[var(--color-text-muted)]">
+          Enter a marketing statement, policy message, or product pitch. Our
+          panel of AI-powered Canadian personas will react to it.
+        </p>
       </div>
 
       {/* Message input */}
@@ -172,9 +152,43 @@ export function InputStep({ onSubmit }: InputStepProps) {
             )}
           </div>
 
+          {/* Age range */}
+          {options?.age_range && (
+            <div>
+              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                Age Range
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={options.age_range.min}
+                  max={options.age_range.max}
+                  value={filters.age_range?.[0] ?? options.age_range.min}
+                  onChange={(e) => {
+                    const min = Math.max(options.age_range!.min, Math.min(parseInt(e.target.value) || options.age_range!.min, filters.age_range?.[1] ?? options.age_range!.max));
+                    setFilters({ ...filters, age_range: [min, filters.age_range?.[1] ?? options.age_range!.max] });
+                  }}
+                  className="w-16 px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-xs text-center"
+                />
+                <span className="text-xs text-[var(--color-text-muted)]">to</span>
+                <input
+                  type="number"
+                  min={options.age_range.min}
+                  max={options.age_range.max}
+                  value={filters.age_range?.[1] ?? options.age_range.max}
+                  onChange={(e) => {
+                    const max = Math.min(options.age_range!.max, Math.max(parseInt(e.target.value) || options.age_range!.max, filters.age_range?.[0] ?? options.age_range!.min));
+                    setFilters({ ...filters, age_range: [filters.age_range?.[0] ?? options.age_range!.min, max] });
+                  }}
+                  className="w-16 px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-xs text-center"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Filter dropdowns */}
           {options && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {FILTER_FIELDS.map(({ key, label, optionsKey }) => {
                 const fieldOptions = options[optionsKey];
                 if (!Array.isArray(fieldOptions) || fieldOptions.length === 0) return null;

@@ -10,6 +10,10 @@ interface ReactionsViewProps {
   onAllDone: () => void;
   /** When true, the summary data is ready and the "View Summary" button is enabled */
   isReady?: boolean;
+  /** The original message being reacted to */
+  message?: string;
+  /** Round 1 reactions — passed when round=2 to show previous reaction per persona */
+  round1Reactions?: Reaction[];
 }
 
 export function ReactionsView({
@@ -18,11 +22,22 @@ export function ReactionsView({
   round,
   onAllDone,
   isReady,
+  message,
+  round1Reactions,
 }: ReactionsViewProps) {
   const allDone = isReady || respondingIndex >= reactions.length;
 
   return (
     <div className="space-y-4">
+      {message && (
+        <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
+          <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+            {round === 2 ? "Optimized Message" : "Original Message"}
+          </p>
+          <p className="text-sm text-[var(--color-text)] whitespace-pre-wrap">{message}</p>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold font-[family-name:var(--font-heading)]">
@@ -65,6 +80,9 @@ export function ReactionsView({
             index={i}
             isActive={i === respondingIndex - 1}
             isResponding={false}
+            round1Reaction={
+              round1Reactions?.find((r1) => r1.persona.uuid === r.persona.uuid)
+            }
           />
         ))}
       </div>

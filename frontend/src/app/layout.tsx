@@ -6,9 +6,14 @@ export const metadata: Metadata = {
   description:
     "Test marketing messages with AI-powered Canadian personas. Get real-time reactions, cultural feedback, and optimized messaging.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
     apple: "/apple-touch-icon.png",
   },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "MaplePulse — Synthetic Focus Group for Canada",
     description:

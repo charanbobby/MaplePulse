@@ -274,39 +274,39 @@ export const MOCK_PANEL: Persona[] = [
 ];
 
 const MOCK_REACTIONS_R1: Omit<Reaction, "persona">[] = [
-  { reaction: "Hmm, this feels very Toronto-centric. In Quebec we think about these things differently — where's the French? This won't land here without bilingual effort.", sentiment_score: 4, resonates: false, tone_fit: "off", cultural_flags: ["no French", "Anglo-centric framing"] },
-  { reaction: "The message is clean and direct, I appreciate that. But 'Canadian dream' feels outdated — most of my peers are worried about affording rent, not dreams.", sentiment_score: 5, resonates: false, tone_fit: "acceptable", cultural_flags: ["housing crisis tone-deaf"] },
-  { reaction: "I've seen messaging like this before and it feels corporate. Real Canadians are struggling with healthcare wait times. Address that and you'll get my attention.", sentiment_score: 4, resonates: false, tone_fit: "acceptable", cultural_flags: ["healthcare gap"] },
-  { reaction: "As a healthcare worker, the optimistic tone feels disconnected from reality. We're burned out. Acknowledge the struggle before selling hope.", sentiment_score: 3, resonates: false, tone_fit: "off", cultural_flags: ["healthcare burnout", "toxic positivity"] },
-  { reaction: "This doesn't speak to Indigenous peoples at all. Our concerns are land rights, clean water, and reconciliation — not whatever this is marketing.", sentiment_score: 2, resonates: false, tone_fit: "off", cultural_flags: ["Indigenous erasure", "no reconciliation mention"] },
-  { reaction: "Straightforward message. Doesn't bother me but doesn't excite me either. Out here we care about practical things — prices, jobs, keeping the farm going.", sentiment_score: 5, resonates: false, tone_fit: "acceptable", cultural_flags: [] },
-  { reaction: "I like the energy but it feels like it's talking AT me, not WITH me. And there's no mention of diversity — Canada's strength IS its diversity.", sentiment_score: 5, resonates: false, tone_fit: "acceptable", cultural_flags: ["lacks diversity mention"] },
-  { reaction: "Sounds like something from a politician's playbook. As someone in the oil patch, I want to hear about real economic plans, not buzzwords.", sentiment_score: 4, resonates: false, tone_fit: "off", cultural_flags: ["political buzzwords", "no energy sector"] },
-  { reaction: "The concept is okay but it doesn't reflect the cost-of-living crisis. I work full-time and can barely afford a studio in Vancouver. Get real.", sentiment_score: 3, resonates: false, tone_fit: "off", cultural_flags: ["cost of living crisis", "housing"] },
-  { reaction: "It's a nice sentiment but feels surface-level. I work with families who are really struggling. The message needs more empathy and less cheerfulness.", sentiment_score: 4, resonates: false, tone_fit: "acceptable", cultural_flags: ["lacks empathy depth"] },
-  { reaction: "By, this is right mainland stuff. Nobody out here talks like that. Give us something that sounds like it knows the bay exists, would ya?", sentiment_score: 3, resonates: false, tone_fit: "off", cultural_flags: ["urban-centric", "ignores Atlantic Canada"] },
-  { reaction: "C'est trop corporate, ça manque d'authenticité. Et pourquoi tout est juste en anglais? Le Québec existe, non?", sentiment_score: 3, resonates: false, tone_fit: "off", cultural_flags: ["English-only", "lacks authenticity"] },
+  { reaction: "Hmm, this feels very Toronto-centric. In Quebec we think about these things differently — where's the French? This won't land here without bilingual effort.", sentiment_score: 2, relevance: "irrelevant", tone_fit: "awkward", cultural_flags: ["no French", "Anglo-centric framing"] },
+  { reaction: "The message is clean and direct, I appreciate that. But 'Canadian dream' feels outdated — most of my peers are worried about affording rent, not dreams.", sentiment_score: 3, relevance: "somewhat", tone_fit: "acceptable", cultural_flags: ["housing crisis tone-deaf"] },
+  { reaction: "I've seen messaging like this before and it feels corporate. Real Canadians are struggling with healthcare wait times. Address that and you'll get my attention.", sentiment_score: 2, relevance: "somewhat", tone_fit: "acceptable", cultural_flags: ["healthcare gap"] },
+  { reaction: "As a healthcare worker, the optimistic tone feels disconnected from reality. We're burned out. Acknowledge the struggle before selling hope.", sentiment_score: 1, relevance: "somewhat", tone_fit: "awkward", cultural_flags: ["healthcare burnout", "toxic positivity"] },
+  { reaction: "This doesn't speak to Indigenous peoples at all. Our concerns are land rights, clean water, and reconciliation — not whatever this is marketing.", sentiment_score: 1, relevance: "irrelevant", tone_fit: "awkward", cultural_flags: ["Indigenous erasure", "no reconciliation mention"] },
+  { reaction: "Straightforward message. Doesn't bother me but doesn't excite me either. Out here we care about practical things — prices, jobs, keeping the farm going.", sentiment_score: 3, relevance: "irrelevant", tone_fit: "acceptable", cultural_flags: [] },
+  { reaction: "I like the energy but it feels like it's talking AT me, not WITH me. And there's no mention of diversity — Canada's strength IS its diversity.", sentiment_score: 3, relevance: "somewhat", tone_fit: "acceptable", cultural_flags: ["lacks diversity mention"] },
+  { reaction: "Sounds like something from a politician's playbook. As someone in the oil patch, I want to hear about real economic plans, not buzzwords.", sentiment_score: 2, relevance: "irrelevant", tone_fit: "awkward", cultural_flags: ["political buzzwords", "no energy sector"] },
+  { reaction: "The concept is okay but it doesn't reflect the cost-of-living crisis. I work full-time and can barely afford a studio in Vancouver. Get real.", sentiment_score: 2, relevance: "somewhat", tone_fit: "awkward", cultural_flags: ["cost of living crisis", "housing"] },
+  { reaction: "It's a nice sentiment but feels surface-level. I work with families who are really struggling. The message needs more empathy and less cheerfulness.", sentiment_score: 2, relevance: "somewhat", tone_fit: "acceptable", cultural_flags: ["lacks empathy depth"] },
+  { reaction: "By, this is right mainland stuff. Nobody out here talks like that. Give us something that sounds like it knows the bay exists, would ya?", sentiment_score: 1, relevance: "irrelevant", tone_fit: "awkward", cultural_flags: ["urban-centric", "ignores Atlantic Canada"] },
+  { reaction: "C'est trop corporate, ça manque d'authenticité. Et pourquoi tout est juste en anglais? Le Québec existe, non?", sentiment_score: 1, relevance: "irrelevant", tone_fit: "awkward", cultural_flags: ["English-only", "lacks authenticity"] },
 ];
 
 const MOCK_REACTIONS_R2: Omit<Reaction, "persona">[] = [
-  { reaction: "Ah, maintenant on parle! The bilingual approach shows respect. The acknowledgment of regional differences — that's more like it. Je suis plus réceptif.", sentiment_score: 7, resonates: true, tone_fit: "acceptable", cultural_flags: [] },
-  { reaction: "Much better. Acknowledging that things are tough but focusing on what communities are doing — that feels honest. Still could address housing directly.", sentiment_score: 7, resonates: true, tone_fit: "acceptable", cultural_flags: [] },
-  { reaction: "This version feels more grounded. Mentioning healthcare challenges directly instead of glossing over them. I'd actually read past the first line.", sentiment_score: 7, resonates: true, tone_fit: "perfect", cultural_flags: [] },
-  { reaction: "Thank you for acknowledging the burnout. The shift from 'everything is great' to 'we see you' is powerful. This would actually land with my colleagues.", sentiment_score: 8, resonates: true, tone_fit: "perfect", cultural_flags: [] },
-  { reaction: "Better — there's a reconciliation mention and it doesn't feel like an afterthought. The tone is more respectful. Still not perfect, but I'd engage with this.", sentiment_score: 6, resonates: true, tone_fit: "acceptable", cultural_flags: ["reconciliation could go deeper"] },
-  { reaction: "Now you're talking sense. Mentioning local economies and practical realities. This is the kind of message I'd share at the co-op.", sentiment_score: 7, resonates: true, tone_fit: "perfect", cultural_flags: [] },
-  { reaction: "Love this version! It celebrates diversity without being preachy. Feels like it was written by someone who actually lives in a diverse neighbourhood.", sentiment_score: 8, resonates: true, tone_fit: "perfect", cultural_flags: [] },
-  { reaction: "Still a bit polished but at least it mentions the energy transition honestly. I don't feel talked down to anymore. That's progress.", sentiment_score: 6, resonates: true, tone_fit: "acceptable", cultural_flags: [] },
-  { reaction: "The cost-of-living acknowledgment makes it real. Before it felt like an ad, now it feels like a conversation. Still needs more specifics.", sentiment_score: 7, resonates: true, tone_fit: "acceptable", cultural_flags: [] },
-  { reaction: "This version has empathy. The stories about real families and communities — that resonates with the work I do every day. Well done.", sentiment_score: 8, resonates: true, tone_fit: "perfect", cultural_flags: [] },
-  { reaction: "Now that's more like it, b'y! Mention of coastal communities and the fishery — someone actually thought about us. I'd share this one.", sentiment_score: 7, resonates: true, tone_fit: "acceptable", cultural_flags: [] },
-  { reaction: "L'approche bilingue montre du respect. Le ton est plus authentique. C'est pas parfait, mais au moins on sent que le Québec fait partie de la conversation.", sentiment_score: 7, resonates: true, tone_fit: "acceptable", cultural_flags: [] },
+  { reaction: "Ah, maintenant on parle! The bilingual approach shows respect. The acknowledgment of regional differences — that's more like it. Je suis plus réceptif.", sentiment_score: 4, relevance: "directly_relevant", tone_fit: "acceptable", cultural_flags: [] },
+  { reaction: "Much better. Acknowledging that things are tough but focusing on what communities are doing — that feels honest. Still could address housing directly.", sentiment_score: 4, relevance: "directly_relevant", tone_fit: "acceptable", cultural_flags: [] },
+  { reaction: "This version feels more grounded. Mentioning healthcare challenges directly instead of glossing over them. I'd actually read past the first line.", sentiment_score: 4, relevance: "directly_relevant", tone_fit: "natural", cultural_flags: [] },
+  { reaction: "Thank you for acknowledging the burnout. The shift from 'everything is great' to 'we see you' is powerful. This would actually land with my colleagues.", sentiment_score: 5, relevance: "directly_relevant", tone_fit: "natural", cultural_flags: [] },
+  { reaction: "Better — there's a reconciliation mention and it doesn't feel like an afterthought. The tone is more respectful. Still not perfect, but I'd engage with this.", sentiment_score: 3, relevance: "directly_relevant", tone_fit: "acceptable", cultural_flags: ["reconciliation could go deeper"] },
+  { reaction: "Now you're talking sense. Mentioning local economies and practical realities. This is the kind of message I'd share at the co-op.", sentiment_score: 4, relevance: "directly_relevant", tone_fit: "natural", cultural_flags: [] },
+  { reaction: "Love this version! It celebrates diversity without being preachy. Feels like it was written by someone who actually lives in a diverse neighbourhood.", sentiment_score: 5, relevance: "directly_relevant", tone_fit: "natural", cultural_flags: [] },
+  { reaction: "Still a bit polished but at least it mentions the energy transition honestly. I don't feel talked down to anymore. That's progress.", sentiment_score: 3, relevance: "somewhat", tone_fit: "acceptable", cultural_flags: [] },
+  { reaction: "The cost-of-living acknowledgment makes it real. Before it felt like an ad, now it feels like a conversation. Still needs more specifics.", sentiment_score: 4, relevance: "directly_relevant", tone_fit: "acceptable", cultural_flags: [] },
+  { reaction: "This version has empathy. The stories about real families and communities — that resonates with the work I do every day. Well done.", sentiment_score: 5, relevance: "directly_relevant", tone_fit: "natural", cultural_flags: [] },
+  { reaction: "Now that's more like it, b'y! Mention of coastal communities and the fishery — someone actually thought about us. I'd share this one.", sentiment_score: 4, relevance: "directly_relevant", tone_fit: "acceptable", cultural_flags: [] },
+  { reaction: "L'approche bilingue montre du respect. Le ton est plus authentique. C'est pas parfait, mais au moins on sent que le Québec fait partie de la conversation.", sentiment_score: 4, relevance: "directly_relevant", tone_fit: "acceptable", cultural_flags: [] },
 ];
 
 export const MOCK_R1_AGGREGATE: AggregatedResults = {
-  avg_sentiment: 3.75,
-  resonance_pct: 0,
-  tone_distribution: { perfect: 0, acceptable: 50, off: 50, offensive: 0 },
+  avg_sentiment: 1.92,
+  relevance_pct: 25,
+  tone_distribution: { natural: 0, acceptable: 42, awkward: 58, offensive: 0 },
   top_cultural_flags: [
     "English-only / no French",
     "Urban-centric, ignores rural/Atlantic Canada",
@@ -331,9 +331,9 @@ export const MOCK_OPTIMIZED: OptimizedMessage = {
 };
 
 export const MOCK_R2_AGGREGATE: AggregatedResults = {
-  avg_sentiment: 7.08,
-  resonance_pct: 100,
-  tone_distribution: { perfect: 42, acceptable: 58, off: 0, offensive: 0 },
+  avg_sentiment: 4.08,
+  relevance_pct: 96,
+  tone_distribution: { natural: 42, acceptable: 58, awkward: 0, offensive: 0 },
   top_cultural_flags: ["reconciliation could go deeper"],
 };
 

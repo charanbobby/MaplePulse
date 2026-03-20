@@ -137,7 +137,7 @@ export default function Home() {
               persona,
               reaction: data.reaction,
               sentiment_score: data.sentiment_score,
-              resonates: data.resonates,
+              relevance: data.relevance,
               tone_fit: data.tone_fit,
               cultural_flags: data.cultural_flags || [],
               model_used: data.model_used,
@@ -152,7 +152,7 @@ export default function Home() {
           onSummaryR1: (data) => {
             setR1Aggregate({
               avg_sentiment: data.avg_sentiment,
-              resonance_pct: data.resonance_pct,
+              relevance_pct: data.relevance_pct,
               tone_distribution: data.tone_distribution,
               top_cultural_flags: data.top_cultural_flags,
             });
@@ -180,7 +180,7 @@ export default function Home() {
               persona,
               reaction: data.reaction,
               sentiment_score: data.sentiment_score,
-              resonates: data.resonates,
+              relevance: data.relevance,
               tone_fit: data.tone_fit,
               cultural_flags: data.cultural_flags || [],
               model_used: data.model_used,
@@ -199,7 +199,7 @@ export default function Home() {
           onSummaryR2: (data) => {
             setR2Aggregate({
               avg_sentiment: data.avg_sentiment,
-              resonance_pct: data.resonance_pct,
+              relevance_pct: data.relevance_pct,
               tone_distribution: data.tone_distribution,
               top_cultural_flags: data.top_cultural_flags,
             });
@@ -265,23 +265,15 @@ export default function Home() {
       {/* Header */}
       <header className="border-b border-[var(--color-border)] bg-[var(--color-bg-card)]">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center">
             <Image
-              src="/logo-mark.png"
-              alt="MaplePulse"
-              width={390}
-              height={630}
-              className="h-10 w-auto object-contain"
+              src="/logo-full.png"
+              alt="MaplePulse — Synthetic Focus Group for Canada"
+              width={1408}
+              height={768}
+              className="h-14 w-auto object-contain"
               priority
             />
-            <div>
-              <h1 className="text-lg font-bold font-[family-name:var(--font-heading)] leading-tight">
-                <span className="text-[#1a3a6b]">Maple</span><span className="text-[#1ab5b0]">Pulse</span>
-              </h1>
-              <p className="text-[10px] text-[var(--color-text-muted)] leading-tight">
-                Synthetic Focus Group for Canada
-              </p>
-            </div>
           </div>
           <div className="flex items-center gap-3">
             {/* Panel drawer toggle */}
@@ -368,6 +360,7 @@ export default function Home() {
             round={1}
             onAllDone={() => setStepTracked("round1_summary")}
             isReady={ready.round1_summary}
+            message={message}
           />
         )}
 
@@ -402,6 +395,8 @@ export default function Home() {
             round={2}
             onAllDone={() => setStepTracked("round2_summary")}
             isReady={ready.round2_summary}
+            message={optimized?.improved_message ?? message}
+            round1Reactions={round1Reactions}
           />
         )}
 
@@ -413,6 +408,7 @@ export default function Home() {
             onContinue={() => setStepTracked("final_comparison")}
             continueLabel={ready.final ? "Final Comparison" : "Finalizing..."}
             canContinue={ready.final}
+            round1Reactions={round1Reactions}
           />
         )}
 
@@ -422,6 +418,7 @@ export default function Home() {
             optimized={optimized}
             round1={r1Aggregate}
             round2={r2Aggregate}
+            traceId={traceId}
             onRestart={handleRestart}
           />
         )}

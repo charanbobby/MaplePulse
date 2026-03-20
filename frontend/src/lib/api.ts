@@ -18,6 +18,18 @@ export interface SSECallbacks {
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
+export async function submitFeedback(
+  traceId: string,
+  value: "good" | "bad" | "partial",
+  comment?: string,
+): Promise<void> {
+  await fetch(`${BACKEND_URL}/api/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ trace_id: traceId, value, comment }),
+  });
+}
+
 export async function runFocusGroup(
   message: string,
   filters: import("@/lib/types").PanelFilters,

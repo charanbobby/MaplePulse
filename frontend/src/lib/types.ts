@@ -27,15 +27,15 @@ export interface Reaction {
   persona: Persona;
   reaction: string;
   sentiment_score: number;
-  resonates: boolean;
-  tone_fit: "perfect" | "acceptable" | "off" | "offensive";
+  relevance: "irrelevant" | "somewhat" | "directly_relevant";
+  tone_fit: "natural" | "acceptable" | "awkward" | "offensive";
   cultural_flags: string[];
   model_used?: string;
 }
 
 export interface AggregatedResults {
   avg_sentiment: number;
-  resonance_pct: number;
+  relevance_pct: number;
   tone_distribution: Record<string, number>;
   top_cultural_flags: string[];
 }

@@ -65,11 +65,11 @@ function ToneBar({
 }
 
 function SentimentDistribution({ reactions }: { reactions: Reaction[] }) {
-  const positive = reactions.filter((r) => r.sentiment_score >= 7).length;
+  const positive = reactions.filter((r) => r.sentiment_score >= 4).length;
   const neutral = reactions.filter(
-    (r) => r.sentiment_score >= 4 && r.sentiment_score < 7
+    (r) => r.sentiment_score === 3
   ).length;
-  const negative = reactions.filter((r) => r.sentiment_score < 4).length;
+  const negative = reactions.filter((r) => r.sentiment_score <= 2).length;
   const total = reactions.length;
 
   return (
@@ -113,6 +113,8 @@ interface SummaryViewProps {
   onContinue: () => void;
   continueLabel: string;
   canContinue?: boolean;
+  /** Round 1 reactions — passed when round=2 so we can show how opinions shifted */
+  round1Reactions?: Reaction[];
 }
 
 export function SummaryView({
@@ -122,18 +124,19 @@ export function SummaryView({
   onContinue,
   continueLabel,
   canContinue = true,
+  round1Reactions,
 }: SummaryViewProps) {
   const sentimentColor =
-    aggregate.avg_sentiment >= 7
+    aggregate.avg_sentiment >= 3.5
       ? "text-emerald-600"
-      : aggregate.avg_sentiment >= 5
+      : aggregate.avg_sentiment >= 2.5
       ? "text-amber-600"
       : "text-red-500";
 
-  const resonanceColor =
-    aggregate.resonance_pct >= 70
+  const relevanceColor =
+    aggregate.relevance_pct >= 70
       ? "text-emerald-600"
-      : aggregate.resonance_pct >= 40
+      : aggregate.relevance_pct >= 40
       ? "text-amber-600"
       : "text-red-500";
 
@@ -171,24 +174,24 @@ export function SummaryView({
         <MetricCard
           label="Avg Sentiment"
           value={aggregate.avg_sentiment.toFixed(1)}
-          subtext="out of 10"
+          subtext="out of 5"
           color={sentimentColor}
         />
         <MetricCard
-          label="Resonance"
-          value={`${aggregate.resonance_pct}%`}
-          subtext="personas resonated"
-          color={resonanceColor}
+          label="Relevance"
+          value={`${aggregate.relevance_pct}%`}
+          subtext="weighted relevance"
+          color={relevanceColor}
         />
         <MetricCard
-          label="Perfect Tone"
-          value={`${aggregate.tone_distribution.perfect || 0}%`}
+          label="Natural Tone"
+          value={`${aggregate.tone_distribution.natural || 0}%`}
           subtext="of reactions"
           color="text-emerald-600"
         />
         <MetricCard
-          label="Off / Offensive"
-          value={`${(aggregate.tone_distribution.off || 0) + (aggregate.tone_distribution.offensive || 0)}%`}
+          label="Awkward / Offensive"
+          value={`${(aggregate.tone_distribution.awkward || 0) + (aggregate.tone_distribution.offensive || 0)}%`}
           subtext="need attention"
           color="text-red-500"
         />
@@ -203,9 +206,9 @@ export function SummaryView({
           <p className="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wide mb-2">
             Tone Fit Distribution
           </p>
-          <ToneBar label="Perfect" pct={aggregate.tone_distribution.perfect || 0} color="bg-emerald-500" />
+          <ToneBar label="Natural" pct={aggregate.tone_distribution.natural || 0} color="bg-emerald-500" />
           <ToneBar label="Acceptable" pct={aggregate.tone_distribution.acceptable || 0} color="bg-blue-500" />
-          <ToneBar label="Off" pct={aggregate.tone_distribution.off || 0} color="bg-amber-500" />
+          <ToneBar label="Awkward" pct={aggregate.tone_distribution.awkward || 0} color="bg-amber-500" />
           <ToneBar label="Offensive" pct={aggregate.tone_distribution.offensive || 0} color="bg-red-500" />
         </div>
       </div>
@@ -230,6 +233,88 @@ export function SummaryView({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Per-persona shift: Round 1 → Round 2 */}
+      {round === 2 && round1Reactions && round1Reactions.length > 0 && (
+        <div className="space-y-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-[var(--color-text-muted)]" />
+              <h3 className="text-sm font-semibold text-[var(--color-text)] uppercase tracking-wide">
+                Reaction Comparison by Persona
+              </h3>
+            </div>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1 ml-6">
+              Each persona reacted to both messages independently — they have no
+              memory of Round 1. Differences reflect how the optimized message
+              lands with the same demographic profile, not a change of opinion.
+            </p>
+          </div>
+          {reactions.map((r2) => {
+            const r1 = round1Reactions.find(
+              (r) => r.persona.uuid === r2.persona.uuid
+            );
+            if (!r1) return null;
+            const sentimentDelta = r2.sentiment_score - r1.sentiment_score;
+            const deltaLabel =
+              sentimentDelta > 0
+                ? `+${sentimentDelta.toFixed(1)}`
+                : sentimentDelta.toFixed(1);
+            const DeltaIcon =
+              sentimentDelta > 0
+                ? TrendingUp
+                : sentimentDelta < 0
+                ? TrendingDown
+                : BarChart3;
+            const deltaColor =
+              sentimentDelta > 0
+                ? "text-emerald-600"
+                : sentimentDelta < 0
+                ? "text-red-500"
+                : "text-[var(--color-text-muted)]";
+            return (
+              <div
+                key={r2.persona.uuid}
+                className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm"
+              >
+                {/* Persona header + sentiment delta */}
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-[var(--color-text)]">
+                    {r2.persona.occupation}, {r2.persona.age} —{" "}
+                    {r2.persona.planning_area}, {r2.persona.province}
+                  </p>
+                  <div className={cn("flex items-center gap-1 text-xs font-mono font-medium", deltaColor)}>
+                    <DeltaIcon size={14} />
+                    <span>{deltaLabel}</span>
+                    <span className="text-[var(--color-text-muted)] ml-1">
+                      sentiment {r1.sentiment_score}/5 → {r2.sentiment_score}/5
+                    </span>
+                  </div>
+                </div>
+                {/* Side-by-side reactions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="rounded-lg bg-[var(--color-surface)] p-3">
+                    <p className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+                      Round 1 — Original Message
+                    </p>
+                    <p className="text-sm italic text-[var(--color-text)]">
+                      &ldquo;{r1.reaction}&rdquo;
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-[var(--color-surface)] p-3">
+                    <p className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+                      Round 2 — Optimized Message
+                    </p>
+                    <p className="text-sm italic text-[var(--color-text)]">
+                      &ldquo;{r2.reaction}&rdquo;
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
