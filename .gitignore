@@ -55,3 +55,8 @@ skills/
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+frontend/tsconfig.tsbuildinfo
+
+# Favicon source files
+favicon.zip
+favicon/
