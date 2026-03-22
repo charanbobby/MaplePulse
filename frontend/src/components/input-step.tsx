@@ -34,12 +34,20 @@ const FILTER_FIELDS: { key: keyof PanelFilters; label: string; optionsKey: keyof
   { key: "political_leaning", label: "Political Leaning", optionsKey: "political_leaning" },
 ];
 
+const EXAMPLE_BRIEFS = [
+  "Young parents in suburban Ontario, worried about screen time, household income $60-100K",
+  "Retirees considering downsizing from houses to condos in BC and Alberta",
+  "Gen Z urban professionals in Montreal and Toronto, environmentally conscious, $40-80K",
+  "Rural Canadians across the Prairies, concerned about cost of living and healthcare access",
+];
+
 interface InputStepProps {
-  onSubmit: (message: string, filters: PanelFilters) => void;
+  onStart: (message: string, audienceBrief: string, filters: PanelFilters) => void;
 }
 
-export function InputStep({ onSubmit }: InputStepProps) {
+export function InputStep({ onStart }: InputStepProps) {
   const [message, setMessage] = useState("");
+  const [audienceBrief, setAudienceBrief] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<PanelFilters>({
     panel_size: 12,
@@ -56,7 +64,7 @@ export function InputStep({ onSubmit }: InputStepProps) {
 
   const handleSubmit = () => {
     if (!message.trim()) return;
-    onSubmit(message.trim(), filters);
+    onStart(message.trim(), audienceBrief.trim(), filters);
   };
 
   // Count active filters (age_range counts if changed from full range)
@@ -73,35 +81,79 @@ export function InputStep({ onSubmit }: InputStepProps) {
   const clearFilters = () => setFilters({ panel_size: filters.panel_size });
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-semibold font-[family-name:var(--font-heading)]">
-          Test Your Message
+    <div className="max-w-3xl mx-auto space-y-5">
+      <div className="text-center space-y-1">
+        <h2 className="text-lg font-semibold">
+          Test your message with a Canadian panel
         </h2>
-        <p className="text-[var(--color-text-muted)]">
-          Enter a marketing statement, policy message, or product pitch. Our
-          panel of AI-powered Canadian personas will react to it.
+        <p className="text-sm text-[var(--color-text-muted)]">
+          Describe your audience, paste your copy, and get reactions from AI personas.
         </p>
       </div>
 
-      {/* Message input */}
-      <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm">
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Enter your marketing message or statement to test..."
-          rows={4}
-          className="w-full px-4 py-3 rounded-t-xl bg-transparent text-[var(--color-text)] placeholder:text-[var(--color-text-light)] focus:outline-none resize-none text-base"
-        />
+      <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)]">
+        {/* Audience Brief */}
+        <div className="px-4 pt-4 pb-2">
+          <label className="text-xs font-medium text-[var(--color-text-muted)] mb-1.5 block">
+            Target Audience
+          </label>
+          <textarea
+            value={audienceBrief}
+            onChange={(e) => setAudienceBrief(e.target.value)}
+            placeholder="e.g. Young parents in suburban Ontario, household income $60-100K"
+            rows={2}
+            className="w-full px-3 py-2 bg-[var(--color-surface)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-light)] focus:outline-none resize-none text-sm"
+          />
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {EXAMPLE_BRIEFS.map((b, i) => (
+              <button
+                key={i}
+                onClick={() => setAudienceBrief(b)}
+                className="text-[10px] px-2 py-0.5 rounded-full text-[var(--color-text-light)] hover:text-[var(--color-text-muted)] transition-colors cursor-pointer"
+              >
+                {b.slice(0, 40)}...
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-t border-[var(--color-border)] mx-4" />
+
+        {/* Message input */}
+        <div className="px-4 pt-3 pb-2">
+          <label className="text-xs font-medium text-[var(--color-text-muted)] mb-1.5 block">
+            Content to Test
+          </label>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Enter your marketing message or statement..."
+            rows={4}
+            className="w-full px-3 py-2 bg-[var(--color-surface)] rounded-lg text-[var(--color-text)] placeholder:text-[var(--color-text-light)] focus:outline-none resize-none text-sm"
+          />
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {EXAMPLE_STATEMENTS.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => setMessage(s)}
+                className="text-[10px] px-2 py-0.5 rounded-full text-[var(--color-text-light)] hover:text-[var(--color-text-muted)] transition-colors cursor-pointer"
+              >
+                {s.slice(0, 45)}...
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Actions */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border)]">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
           >
-            <SlidersHorizontal size={16} />
-            Panel Filters
+            <SlidersHorizontal size={14} />
+            Filters
             {activeFilterCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-[var(--color-primary)] text-white">
+              <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-[var(--color-surface)] text-[var(--color-text)]">
                 {activeFilterCount}
               </span>
             )}
@@ -109,21 +161,20 @@ export function InputStep({ onSubmit }: InputStepProps) {
           <button
             onClick={handleSubmit}
             disabled={!message.trim()}
-            className="flex items-center gap-2 px-5 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg font-medium text-sm transition-colors cursor-pointer"
           >
-            <Send size={16} />
-            Run Focus Group
+            <Send size={14} />
+            Run
           </button>
         </div>
       </div>
 
       {/* Filters panel */}
       {showFilters && (
-        <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 space-y-4 shadow-sm">
-          {/* Panel size + clear */}
+        <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex-1 max-w-xs">
-              <label className="block text-sm font-medium mb-1.5">
+              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
                 Panel Size: {filters.panel_size}
               </label>
               <input
@@ -136,10 +187,6 @@ export function InputStep({ onSubmit }: InputStepProps) {
                 }
                 className="w-full accent-[var(--color-primary)]"
               />
-              <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
-                <span>6</span>
-                <span>20</span>
-              </div>
             </div>
             {activeFilterCount > 0 && (
               <button
@@ -147,12 +194,11 @@ export function InputStep({ onSubmit }: InputStepProps) {
                 className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-red-500 transition-colors cursor-pointer"
               >
                 <X size={12} />
-                Clear all filters
+                Clear
               </button>
             )}
           </div>
 
-          {/* Age range */}
           {options?.age_range && (
             <div>
               <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
@@ -168,7 +214,7 @@ export function InputStep({ onSubmit }: InputStepProps) {
                     const min = Math.max(options.age_range!.min, Math.min(parseInt(e.target.value) || options.age_range!.min, filters.age_range?.[1] ?? options.age_range!.max));
                     setFilters({ ...filters, age_range: [min, filters.age_range?.[1] ?? options.age_range!.max] });
                   }}
-                  className="w-16 px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-xs text-center"
+                  className="w-14 px-2 py-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-xs text-center"
                 />
                 <span className="text-xs text-[var(--color-text-muted)]">to</span>
                 <input
@@ -180,41 +226,34 @@ export function InputStep({ onSubmit }: InputStepProps) {
                     const max = Math.min(options.age_range!.max, Math.max(parseInt(e.target.value) || options.age_range!.max, filters.age_range?.[0] ?? options.age_range!.min));
                     setFilters({ ...filters, age_range: [filters.age_range?.[0] ?? options.age_range!.min, max] });
                   }}
-                  className="w-16 px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-xs text-center"
+                  className="w-14 px-2 py-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-xs text-center"
                 />
               </div>
             </div>
           )}
 
-          {/* Filter dropdowns */}
           {options && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {FILTER_FIELDS.map(({ key, label, optionsKey }) => {
                 const fieldOptions = options[optionsKey];
                 if (!Array.isArray(fieldOptions) || fieldOptions.length === 0) return null;
                 const currentValue = (filters[key] as string[] | undefined) ?? [];
-
                 return (
                   <div key={key}>
-                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                    <label className="block text-xs text-[var(--color-text-muted)] mb-0.5">
                       {label}
                     </label>
                     <select
                       value={currentValue[0] || ""}
                       onChange={(e) => {
                         const val = e.target.value;
-                        setFilters({
-                          ...filters,
-                          [key]: val ? [val] : undefined,
-                        });
+                        setFilters({ ...filters, [key]: val ? [val] : undefined });
                       }}
-                      className="w-full px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-xs"
+                      className="w-full px-2 py-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-xs"
                     >
                       <option value="">All</option>
                       {(fieldOptions as string[]).map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
+                        <option key={opt} value={opt}>{opt}</option>
                       ))}
                     </select>
                   </div>
@@ -224,28 +263,10 @@ export function InputStep({ onSubmit }: InputStepProps) {
           )}
 
           {!options && (
-            <p className="text-xs text-[var(--color-text-muted)]">Loading filter options...</p>
+            <p className="text-xs text-[var(--color-text-muted)]">Loading options...</p>
           )}
         </div>
       )}
-
-      {/* Example prompts */}
-      <div className="space-y-2">
-        <p className="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wide">
-          Try an example
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {EXAMPLE_STATEMENTS.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => setMessage(s)}
-              className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
-            >
-              {s.slice(0, 60)}...
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

@@ -59,4 +59,4 @@ frontend/tsconfig.tsbuildinfo
 
 # Favicon source files
 favicon.zip
-favicon/
+favicon/backend/db/personas.db

@@ -1,0 +1,38 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8100:8000"
+    volumes:
+      - ./data:/app/data:ro
+      - ./canada_demographics_2021.py:/app/canada_demographics_2021.py:ro
+      - backend-db:/app/db
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_BACKEND_URL: https://maplepulse.sshub.dev
+        NEXT_PUBLIC_LANGFUSE_HOST: https://us.cloud.langfuse.com
+        NEXT_PUBLIC_LANGFUSE_PROJECT_ID: cmmrsvbva04hnad07a4cds6ku
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8101:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+
+volumes:
+  backend-db:

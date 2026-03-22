@@ -15,7 +15,9 @@ services:
     volumes:
       - ./backend:/app
       - ./data:/app/data:ro
+      - ./canada_demographics_2021.py:/app/canada_demographics_2021.py:ro
       - ./.env:/app/.env:ro
+      - backend-db:/app/db
     env_file:
       - .env
 
@@ -35,3 +37,6 @@ services:
       - .env
     depends_on:
       - backend
+
+volumes:
+  backend-db:

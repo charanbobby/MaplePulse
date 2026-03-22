@@ -279,3 +279,237 @@
 - 8-step workflow: Input → Panel → Round 1 → Summary → Optimize → Round 2 → Summary → Final
 - API route stubbed, ready to connect to Python LangGraph backend
 - Docker Compose now runs both notebook (port 8888) and frontend (port 3000)
+
+---
+
+## Session 6 (2026-03-19, continued)
+
+### What was done
+
+**1. Backend API — FastAPI + LangGraph (`backend/main.py`)**
+- Built the full MaplePulse backend as a FastAPI app with LangGraph orchestration
+- Loads 5,000 personas at startup, indexed for filtering
+- Panel filtering by: province, age range, sex, income bracket, education, marital status, immigration status, Indigenous identity, visible minority, political leaning, religion, commute mode, housing type, languages, top concerns
+- LangGraph pipeline: classify_intent → select_panel → run_reactions (concurrent) → aggregate → optimize_message → run_reactions_v2 → aggregate_v2
+- SSE streaming — frontend receives progress events for each of the 8 workflow steps
+- Multi-model reaction pool: `openai/gpt-5-nano`, `openai/gpt-5-mini`, `mistralai/mistral-small`, `google/gemini-3-flash`, `xai/grok-3-mini`
+- Default model: `openai/gpt-5-nano`, optimizer model: `openai/gpt-5.1`
+- Endpoints: `POST /api/focus-group`, `GET /api/panel-options`, `POST /api/panel-preview`, `POST /api/feedback` (Langfuse), `GET /health`
+
+**2. Frontend backend client (`frontend/src/lib/api.ts`)**
+- Added API client to connect frontend to the FastAPI backend via SSE
+- Frontend API route (`api/focus-group/route.ts`) proxies to backend
+
+**3. Docker Compose updated**
+- Added `backend` service on port 8000 (FastAPI)
+- Docker Compose now runs 3 services: notebook (:8888), backend (:8000), frontend (:3000)
+- Frontend depends_on backend
+
+### Files created/modified
+
+| File | Change |
+|------|--------|
+| `backend/main.py` | NEW — FastAPI + LangGraph backend (696 lines) |
+| `frontend/src/lib/api.ts` | NEW — Backend API client |
+| `docker-compose.yml` | MODIFIED — added backend service |
+
+### Current state
+
+- Backend API is functional with full LangGraph pipeline
+- Frontend wired to backend via SSE streaming
+- 3-service Docker Compose (notebook + backend + frontend)
+
+---
+
+## Session 7 (2026-03-20)
+
+### What was done
+
+**1. Scoring rubric rework — reduce sycophantic bias**
+
+Problem: Performance log showed R1 resonance always 95-100% and sentiment scores 6.5-7.2/10 regardless of input quality. Personas were being too positive (sycophantic LLM behavior).
+
+Changes:
+- **Sentiment scale**: 1-10 → **1-5** with anchored descriptions per level (1=hostile, 2=skeptical, 3=neutral, 4=interested, 5=enthusiastic). Explicit instruction: "A mediocre message deserves mediocre scores."
+- **Resonance**: boolean `resonates` → **`relevance`** enum (`irrelevant` / `somewhat` / `directly_relevant`). Three levels instead of binary removes the "default to yes" bias.
+- **Tone fit labels**: "perfect"/"off-putting" → **"natural"/"awkward"**. Neutral labels avoid implying a positive default — "acceptable" replaces "perfect" as the middle ground for generic ads.
+- **Scoring Calibration section** added to system prompt: explicit anti-sycophancy guidance ("Score structured fields independently from reaction text. Do not default to positive scores.")
+- **Aggregation updated**: weighted relevance scoring replaces binary resonance percentage
+- **All frontend components updated**: types, mock data, summary-view, reaction-card, final-comparison, input-step — all aligned to new schema
+
+**2. Favicon and manifest assets**
+- Added `favicon-96x96.png`, `favicon.svg`, `site.webmanifest`, PWA icons (192x192, 512x512)
+- Updated `.gitignore` for favicon source files and `tsconfig.tsbuildinfo`
+
+### Files modified
+
+| File | Change |
+|------|--------|
+| `backend/main.py` | MODIFIED — new scoring schema, calibration prompt, weighted aggregation |
+| `frontend/src/lib/types.ts` | MODIFIED — `resonates` → `relevance`, sentiment 1-5, tone fit labels |
+| `frontend/src/lib/mock-data.ts` | MODIFIED — mock data aligned to new schema |
+| `frontend/src/components/summary-view.tsx` | MODIFIED — relevance distribution, new tone labels |
+| `frontend/src/components/reaction-card.tsx` | MODIFIED — 1-5 sentiment display, relevance badge |
+| `frontend/src/components/final-comparison.tsx` | MODIFIED — delta metrics for new schema |
+| `frontend/src/components/reactions-view.tsx` | MODIFIED — new schema support |
+| `frontend/src/components/input-step.tsx` | MODIFIED — updated for new flow |
+| `frontend/src/app/page.tsx` | MODIFIED — aligned to new types |
+| `frontend/src/app/layout.tsx` | MODIFIED — favicon/manifest references |
+| `frontend/public/` | NEW — favicon assets and webmanifest |
+| `.gitignore` | MODIFIED — favicon sources, tsbuildinfo |
+
+### Anti-sycophancy rubric design decisions
+
+| Before (v1) | After (v2) | Rationale |
+|-------------|-----------|-----------|
+| Sentiment 1-10 | Sentiment 1-5 with anchors | Narrower scale + anchored descriptions reduce tendency to cluster at 7+ |
+| `resonates: bool` | `relevance: irrelevant/somewhat/directly_relevant` | Binary forced "yes" default; three levels allow honest "meh" |
+| `tone_fit: perfect/acceptable/off/offensive` | `tone_fit: natural/acceptable/awkward/offensive` | "Perfect" is aspirational and biases toward selection; "natural" is descriptive |
+| No scoring guidance | Scoring Calibration section in system prompt | Explicit instruction to score independently and avoid positive defaults |
+
+### Current state
+
+- Scoring rubrics are tighter and calibrated against sycophantic bias
+- Frontend fully aligned to new schema
+- Performance log (`data/experiments/performance_log.csv`) predates this change — future runs should show more varied score distributions
+
+---
+
+## Session 8 (2026-03-21)
+
+### What was done
+
+**1. Agentic Persona Engine — panel_engine.py**
+- Built `backend/panel_engine.py` — the agentic persona engine for dynamic panel assembly
+- Three-phase pipeline: parse audience brief → context projection → ReAct agent with tools
+- Tools: `search_personas`, `generate_personas`, `fetch_data`
+- SQLite persona database replaces static JSON pool
+- Langfuse tracing with named spans (`parse_audience_brief`, `context_projection`, `panel_builder_agent`)
+
+**2. Model optimization**
+- Switched from GPT-5.4 to `openai/gpt-5.4-mini` (~10x cheaper) for both orchestrator and agent
+- Model configurable via `PANEL_AGENT_MODEL` and `PANEL_ORCHESTRATOR_MODEL` env vars
+
+**3. generate_personas tool improvements**
+- NOC codes resolved to specific job titles via `_OCCUPATION_EXEMPLARS` lookup
+- Income estimation via `_estimate_income()` + `_assign_income_bracket()` — no more "Unknown" income
+- Age distribution: filters census brackets to overlap with requested range instead of clamping
+- City constraint: respects specified cities instead of random CMA selection
+
+**4. CPI inflation adjustment**
+- Census 2021 income data has reference year 2020 — incomes have risen ~23% since then
+- Added `_INCOME_INFLATION_FACTOR = 1.23` constant applied to all 2020 base income ranges
+- Applied to `_OCCUPATION_INCOME_RANGES` pre-computed dict and special-case estimates (Retired, Student, Unemployed)
+- Updated all documentation (DataSources.md, MaplePulse-Plan.md, NextSteps.md) to note the adjustment
+
+**5. Cleanup**
+- Removed stale "persist" step from agent system prompt (persist_personas was removed from tools)
+- Cleaned 115 low-quality generated personas from SQLite DB
+
+### Files modified
+
+| File | Change |
+|------|--------|
+| `backend/panel_engine.py` | MODIFIED — model switch, run_name spans, occupation exemplars, income estimation, inflation adjustment, system prompt cleanup, city parameter |
+| `docs/DataSources.md` | MODIFIED — added Census 2020 income inflation adjustment note |
+| `docs/MaplePulse-Plan.md` | MODIFIED — inflation adjustment references in data sources and asset table |
+| `docs/NextSteps.md` | MODIFIED — inflation adjustment as completed item |
+| `docs/Progress.md` | MODIFIED — added Session 8 |
+
+### Current state
+
+- Agentic persona engine generates targeted personas with realistic income, job titles, and age distribution
+- All income figures inflation-adjusted from 2020 Census base to 2026 (CPI factor 1.23)
+- Agent model is gpt-5.4-mini for cost efficiency
+- Documentation updated across all docs to reflect inflation adjustment
+
+---
+
+## Session 9 (2026-03-22)
+
+### What was done
+
+**1. Full backend integration of agentic persona engine**
+- Wired `panel_engine.py` into `backend/main.py` — DB init + seed migration runs at startup
+- Added SQLite persona DB as a Docker named volume (`backend-db`) for persistence across rebuilds
+- Health endpoint now reports `persona_db` stats (total personas, seed count, generated count) and `llm_cache` stats
+
+**2. New API endpoints for split-phase workflow**
+- `POST /api/build-panel` — runs the agentic panel builder via SSE, streaming audience spec → context projection → agent log → panel assembly. Stops after panel — does NOT run reactions. Used when user provides an audience brief.
+- `POST /api/select-panel` — quick filter-based panel selection from the static pool (no LLM calls). Used when user provides demographic filters only.
+- `POST /api/run-with-panel` — runs Round 1 reactions only with a pre-built panel, then pauses for human review. Auto-filters low-quality reactions before returning.
+- `POST /api/continue-after-review` — continues pipeline after human review: R1 summary → optimize → R2 reactions → R2 summary → done. Accepts the user's curated R1 reactions (after manual exclusions).
+
+**3. Reaction quality filtering**
+- Added `_filter_reactions()` — auto-removes reactions that are errors, have empty text, very short text (<15 chars), or "irrelevant" relevance with sentiment ≤2
+- Safety floor: always keeps at least 3 reactions even if filter removes many
+- Frontend receives `reactions_filtered` SSE event showing kept/removed counts and per-persona removal reasons
+
+**4. Reaction prompt improvements**
+- Added: "Do NOT invent or assume details not in the message" — prevents personas from reacting to features/prices not mentioned
+- Added: "If the message is about your professional field, react with domain knowledge" — AI researchers now sound like experts on AI products
+- Changed scoring calibration: scores MUST be consistent with reaction text (positive text = 4-5, critical text = 1-2). Previous guidance said to "score independently" which caused mismatches.
+
+**5. Optimizer prompt rewrite**
+- Reframed from defensive ("don't add info") to goal-driven ("make Round 2 score HIGHER on all three metrics")
+- Key shift: preserve vivid/emotional language unless a MAJORITY of panelists flagged it. Previous version was overly cautious and stripped persuasive language.
+- Added self-check section: optimizer must verify it hasn't degraded sentiment, natural tone, or relevance before finalizing
+- Fixed symbol preservation: ampersands (&) and special characters no longer get replaced
+- Removed XML `<FINAL_RESPONSE>` tag requirement from prompt (added regex strip as fallback)
+- Pattern-based changes only: requires 3+ panelists to flag something before acting, not individual outliers
+
+**6. Model upgrades**
+- Optimizer: `openai/gpt-5.1` → `openai/gpt-5.4` (better instruction following)
+- Reaction models updated: `openai/gpt-5-nano` → `gpt-5.4-nano`, `gpt-5-mini` → `gpt-5.4-mini`, `mistral-small` → `mistral-small-2603`, `gemini-3-flash` → `gemini-3-flash-preview`, `grok-3-mini` → `grok-4.20-beta`
+
+**7. Langfuse improvements**
+- Custom `OpenRouterLangfuseHandler` — extracts cost from OpenRouter response metadata and attaches it to Langfuse observations
+- Session ID tracking: all LLM calls within a focus group run share a `langfuse_session_id`
+
+**8. Frontend refactor — 3-phase split architecture**
+- Replaced single `runFocusGroup()` flow with 3 independent phases:
+  - Phase 1: `handleStart()` — builds panel (agentic via `/api/build-panel` or filter-based via `/api/select-panel`)
+  - Phase 2: `handleRunReactions()` — runs R1 reactions via `/api/run-with-panel`, pauses for review
+  - Phase 3: `handleContinue()` — user reviews R1, excludes bad reactions, continues via `/api/continue-after-review`
+- Audience brief input field added to InputStep component (free-text field alongside demographic filters)
+- Agentic metadata display: audience spec, context projection, panel metadata, agent log shown when audience brief was used
+- R1 review: users can manually exclude individual persona reactions before continuing to optimization
+- Panel view shows `source` badge (seed vs generated) for agentic panels
+
+**9. Frontend API client rewrite (`frontend/src/lib/api.ts`)**
+- New functions: `runBuildPanel()`, `selectPanel()`, `runWithPanel()`, `continueAfterReview()`
+- Each handles SSE streaming with typed callbacks
+- Old `runFocusGroup()` kept for backwards compatibility but no longer the primary path
+
+**10. Docker Compose**
+- Added `backend-db` named volume for SQLite persona database persistence
+- DB mounted at `/app/db` in the backend container
+
+### Files created/modified
+
+| File | Change |
+|------|--------|
+| `backend/main.py` | MODIFIED — panel_engine integration, 4 new endpoints, reaction filtering, prompt improvements, model upgrades, Langfuse cost tracking |
+| `backend/panel_engine.py` | NEW (Session 8) — agentic persona engine with SQLite, tools, context projection |
+| `backend/db/personas.db` | NEW — SQLite persona database (auto-created at startup) |
+| `docker-compose.yml` | MODIFIED — added `backend-db` named volume |
+| `frontend/src/app/page.tsx` | MODIFIED — 3-phase architecture, audience brief, R1 review, agentic metadata |
+| `frontend/src/lib/api.ts` | MODIFIED — 4 new API client functions for split-phase workflow |
+| `frontend/src/lib/types.ts` | MODIFIED — added source field to Persona type |
+| `frontend/src/components/input-step.tsx` | MODIFIED — audience brief input field |
+| `frontend/src/components/panel-view.tsx` | MODIFIED — source badges, expanded persona details |
+| `frontend/src/components/reactions-view.tsx` | MODIFIED — exclusion support for R1 review |
+| `frontend/src/components/summary-view.tsx` | MODIFIED — minor alignment fixes |
+| `frontend/src/components/final-comparison.tsx` | MODIFIED — expanded delta metrics display |
+| `frontend/src/components/workflow-stepper.tsx` | MODIFIED — new step support |
+| `README.md` | REWRITTEN — updated to reflect agentic engine, new architecture, current stack |
+
+### Current state
+
+- Full agentic pipeline working: audience brief → parse → context projection → agent builds panel → reactions → review → optimize → R2
+- Also supports filter-only mode (no LLM for panel building) for quick runs
+- 3-phase frontend with human review checkpoint between R1 and optimization
+- All models upgraded to latest versions (gpt-5.4 family, grok-4.20, gemini-3-flash-preview)
+- SQLite persona DB persisting across Docker rebuilds via named volume
+- Reaction filtering removes low-quality responses before aggregation
+- Langfuse traces include OpenRouter cost data and session grouping

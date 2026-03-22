@@ -22,12 +22,12 @@ export function OptimizationView({
     <div className="space-y-4 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold font-[family-name:var(--font-heading)] flex items-center gap-2">
-            <Sparkles size={20} className="text-[var(--color-cta)]" />
+          <h2 className="text-base font-semibold flex items-center gap-1.5">
+            <Sparkles size={16} className="text-[var(--color-text-muted)]" />
             Optimized Message
           </h2>
-          <p className="text-sm text-[var(--color-text-muted)]">
-            AI-rewritten based on panel reactions and cultural flags
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Rewritten based on panel reactions
           </p>
         </div>
         <button
@@ -35,59 +35,44 @@ export function OptimizationView({
           disabled={!canContinue}
           className={
             canContinue
-              ? "flex items-center gap-2 px-4 py-2 bg-[var(--color-cta)] hover:bg-[var(--color-cta-hover)] text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
-              : "flex items-center gap-2 px-4 py-2 bg-[var(--color-text-light)] text-white rounded-lg text-sm font-medium cursor-not-allowed opacity-60"
+              ? "flex items-center gap-2 px-4 py-1.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
+              : "flex items-center gap-2 px-4 py-1.5 bg-[var(--color-text-light)] text-white rounded-lg text-sm font-medium cursor-not-allowed opacity-50"
           }
         >
           {!canContinue && (
-            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
           )}
           {continueLabel}
-          {canContinue && <ArrowRight size={16} />}
+          {canContinue && <ArrowRight size={14} />}
         </button>
       </div>
 
-      {/* Before / After comparison */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Original */}
-        <div className="bg-[var(--color-bg-card)] rounded-xl border border-red-200 p-4 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-red-400" />
-            <p className="text-xs font-medium uppercase tracking-wide text-red-600">
-              Original Message
-            </p>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="bg-[var(--color-bg-card)] rounded-lg border border-[var(--color-border)] p-3">
+          <p className="text-xs text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-400" /> Original
+          </p>
           <p className="text-sm leading-relaxed text-[var(--color-text)]">
             {originalMessage}
           </p>
         </div>
 
-        {/* Improved */}
-        <div className="bg-[var(--color-bg-card)] rounded-xl border border-emerald-200 p-4 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-            <p className="text-xs font-medium uppercase tracking-wide text-emerald-600">
-              Improved Message
-            </p>
-          </div>
+        <div className="bg-[var(--color-bg-card)] rounded-lg border border-[var(--color-border)] p-3">
+          <p className="text-xs text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" /> Improved
+          </p>
           <p className="text-sm leading-relaxed text-[var(--color-text)]">
             {optimized.improved_message}
           </p>
         </div>
       </div>
 
-      {/* Changes made */}
-      <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
-          Changes Made
-        </p>
-        <div className="space-y-2">
+      <div className="bg-[var(--color-surface)] rounded-lg p-3">
+        <p className="text-xs text-[var(--color-text-muted)] mb-1.5">Changes</p>
+        <div className="space-y-1">
           {optimized.changes_made.map((change, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <Check
-                size={14}
-                className="text-emerald-500 mt-0.5 flex-shrink-0"
-              />
+            <div key={i} className="flex items-start gap-1.5">
+              <Check size={12} className="text-emerald-500 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-[var(--color-text)]">{change}</p>
             </div>
           ))}

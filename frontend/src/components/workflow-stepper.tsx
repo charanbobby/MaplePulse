@@ -1,45 +1,70 @@
 "use client";
 
 import {
-  MessageSquare,
-  Users,
-  Play,
-  BarChart3,
-  Sparkles,
-  RotateCcw,
-  Trophy,
   CheckCircle2,
 } from "lucide-react";
-import type { WorkflowStep } from "@/lib/types";
+import type { WorkflowStep, UseCaseMode } from "@/lib/types";
 import { cn } from "@/lib/cn";
 
-const STEPS: { key: WorkflowStep; label: string; icon: React.ElementType }[] = [
-  { key: "input", label: "Input", icon: MessageSquare },
-  { key: "panel_selection", label: "Panel", icon: Users },
-  { key: "round1_responding", label: "Round 1", icon: Play },
-  { key: "round1_summary", label: "Summary", icon: BarChart3 },
-  { key: "optimization", label: "Optimize", icon: Sparkles },
-  { key: "round2_responding", label: "Round 2", icon: RotateCcw },
-  { key: "round2_summary", label: "Compare", icon: BarChart3 },
-  { key: "final_comparison", label: "Final", icon: Trophy },
+const ALL_STEPS: { key: WorkflowStep; label: string }[] = [
+  { key: "input", label: "Input" },
+  { key: "panel_selection", label: "Panel" },
+  { key: "round1_responding", label: "Round 1" },
+  { key: "round1_review", label: "Review" },
+  { key: "round1_summary", label: "Summary" },
+  { key: "optimization", label: "Optimize" },
+  { key: "round2_responding", label: "Round 2" },
+  { key: "round2_summary", label: "Compare" },
+  { key: "final_comparison", label: "Final" },
 ];
 
-const STEP_ORDER = STEPS.map((s) => s.key);
+const MODE_STEPS: Record<UseCaseMode, WorkflowStep[]> = {
+  focus_group: [
+    "input", "panel_selection", "round1_responding", "round1_review",
+    "round1_summary", "optimization", "round2_responding", "round2_summary", "final_comparison",
+  ],
+  ab_copy_test: [
+    "input", "panel_selection", "round1_responding", "final_comparison",
+  ],
+  survey_pretest: [
+    "input", "panel_selection", "round1_responding", "final_comparison",
+  ],
+};
+
+const MODE_LABELS: Partial<Record<UseCaseMode, Partial<Record<WorkflowStep, { label: string }>>>> = {
+  ab_copy_test: {
+    round1_responding: { label: "Testing" },
+    final_comparison: { label: "Results" },
+  },
+  survey_pretest: {
+    round1_responding: { label: "Evaluating" },
+    final_comparison: { label: "Results" },
+  },
+};
 
 interface WorkflowStepperProps {
   currentStep: WorkflowStep;
   onStepClick?: (step: WorkflowStep) => void;
   ready?: { [key: string]: boolean };
+  mode?: UseCaseMode;
 }
 
-export function WorkflowStepper({ currentStep, onStepClick, ready }: WorkflowStepperProps) {
-  const currentIdx = STEP_ORDER.indexOf(currentStep);
+export function WorkflowStepper({ currentStep, onStepClick, ready, mode = "focus_group" }: WorkflowStepperProps) {
+  const visibleKeys = MODE_STEPS[mode];
+  const steps = visibleKeys.map((key) => {
+    const base = ALL_STEPS.find((s) => s.key === key)!;
+    const override = MODE_LABELS[mode]?.[key];
+    return override ? { key, label: override.label } : base;
+  });
+
+  const currentIdx = visibleKeys.indexOf(currentStep);
 
   // Map step keys to ready flags for clickability
   const STEP_READY_MAP: Record<string, string | null> = {
     input: null, // always accessible
     panel_selection: "panel",
     round1_responding: "round1_done",
+    round1_review: "round1_done",
     round1_summary: "round1_summary",
     optimization: "optimization",
     round2_responding: "round2_done",
@@ -48,9 +73,8 @@ export function WorkflowStepper({ currentStep, onStepClick, ready }: WorkflowSte
   };
 
   return (
-    <div className="flex items-center gap-1 overflow-x-auto pb-2">
-      {STEPS.map((step, i) => {
-        const Icon = step.icon;
+    <div className="flex items-center justify-center gap-0.5 overflow-x-auto">
+      {steps.map((step, i) => {
         const isActive = i === currentIdx;
         const isDone = i < currentIdx;
         const readyKey = STEP_READY_MAP[step.key];
@@ -63,27 +87,23 @@ export function WorkflowStepper({ currentStep, onStepClick, ready }: WorkflowSte
               onClick={() => isClickable && onStepClick?.(step.key)}
               disabled={!isClickable}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                isActive && "bg-[var(--color-primary)] text-white shadow-md",
-                isDone && "bg-[var(--color-primary)]/10 text-[var(--color-primary)]",
-                !isActive && !isDone && hasData && "bg-emerald-50 text-emerald-600",
-                !isActive && !isDone && !hasData && "bg-[var(--color-surface)] text-[var(--color-text-muted)]",
+                "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                isActive && "bg-[var(--color-primary)] text-white",
+                isDone && "text-[var(--color-text)]",
+                !isActive && !isDone && hasData && "text-emerald-600",
+                !isActive && !isDone && !hasData && "text-[var(--color-text-light)]",
                 isClickable && "cursor-pointer hover:opacity-80",
                 !isClickable && "cursor-default"
               )}
             >
-              {isDone ? (
-                <CheckCircle2 size={16} />
-              ) : (
-                <Icon size={16} />
-              )}
-              <span className="hidden sm:inline whitespace-nowrap">{step.label}</span>
+              {isDone && <CheckCircle2 size={12} className="inline mr-1 -mt-0.5" />}
+              <span className="whitespace-nowrap">{step.label}</span>
             </button>
-            {i < STEPS.length - 1 && (
+            {i < steps.length - 1 && (
               <div
                 className={cn(
-                  "w-4 h-0.5 mx-0.5",
-                  isDone ? "bg-[var(--color-primary)]" : "bg-[var(--color-border)]"
+                  "w-3 h-px mx-0.5",
+                  isDone ? "bg-[var(--color-text)]" : "bg-[var(--color-border)]"
                 )}
               />
             )}

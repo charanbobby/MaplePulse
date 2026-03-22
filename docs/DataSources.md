@@ -229,6 +229,14 @@ Beyond Statistics Canada 2021 Census data, the following sources can enrich pers
 - **Status**: **ACTIVELY USED** — integrated into `scripts/generate_canada_personas.py` for income assignment
 - **Persona use**: `estimated_annual_income`, `income_bracket`, `income_source` fields. Age-adjusted within wage quartiles. Non-employed personas (retirees, students, unemployed) get estimated income from pensions, EI, etc.
 
+### Statistics Canada 2021 Census — Income Data (Base Year: 2020)
+
+- **What**: Census income brackets and occupation-based income ranges. Reference year is 2020 (one year before Census 2021 enumeration).
+- **Inflation adjustment**: All 2020 Census-derived income figures are adjusted to 2026 using a **CPI inflation factor of 1.23** (~23% cumulative inflation from 2020 to 2026, based on Bank of Canada CPI data). This factor is applied in `backend/panel_engine.py` via the `_INCOME_INFLATION_FACTOR` constant to:
+  - `_OCCUPATION_INCOME_RANGES` — per-NOC-category low/median/high income ranges
+  - Special-case income estimates for Retired, Student, Stay-at-home Parent, and Unemployed personas
+- **Status**: **ACTIVELY USED** — integrated into `backend/panel_engine.py` for dynamic persona generation via `_estimate_income()` + `_assign_income_bracket()`
+
 ### Occupation → NOC Mapping
 - **What**: Custom mapping of 100+ occupation exemplars to NOC 5-digit codes
 - **File**: `data/occupation_noc_mapping.json`
@@ -260,7 +268,7 @@ Beyond Statistics Canada 2021 Census data, the following sources can enrich pers
 
 ---
 
-## 8. Open Datasets on HuggingFace / Kaggle
+## 9. Open Datasets on HuggingFace / Kaggle
 
 ### HuggingFace Synthetic Persona Datasets
 - **SynthLabsAI/PERSONA**: 200k+ synthetic preferences over 1,000 personas grounded in US census (adaptable to Canadian census)
@@ -290,7 +298,7 @@ Beyond Statistics Canada 2021 Census data, the following sources can enrich pers
 
 ---
 
-## 9. Reddit / Social Media Analysis
+## 10. Reddit / Social Media Analysis
 
 ### r/Canada Dataset on Kaggle
 - **What**: Full dataset of r/Canada subreddit posts available for analysis
@@ -313,7 +321,7 @@ Beyond Statistics Canada 2021 Census data, the following sources can enrich pers
 
 ---
 
-## 10. Additional Statistics Canada Surveys (Free PUMFs)
+## 11. Additional Statistics Canada Surveys (Free PUMFs)
 
 ### General Social Survey (GSS) - Multiple Cycles
 - **Time Use** (2015, and earlier): 24-hour diary of activities - sleep, work, leisure, etc.
@@ -338,7 +346,7 @@ Beyond Statistics Canada 2021 Census data, the following sources can enrich pers
 
 ---
 
-## 11. Other Notable Sources
+## 12. Other Notable Sources
 
 ### Ipsos Canadian Public Affairs Dataverse
 - **What**: 60+ Ipsos Canada surveys on elections, culture, politics, society. All open access.

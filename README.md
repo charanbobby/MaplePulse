@@ -1,378 +1,250 @@
 # MaplePulse
 
-Synthetic focus group service for Canada. Ask a question or test a marketing message against thousands of AI personas grounded in real Statistics Canada 2021 Census demographics.
+Synthetic focus group as a service for Canada. Describe your target audience, paste your content — get instant reactions from dynamically assembled AI personas grounded in 30+ real Canadian data sources.
 
 Inspired by [Ask Singapore](https://github.com/AayushMathur7/ask-singapore) by Aayush Mathur.
 
 ## How It Works
 
-1. **5,000 synthetic personas** are generated from real Canadian census distributions (province, age, sex, occupation, education, income, immigration status, Indigenous identity, visible minority, religion, political leaning, and more)
-2. **A LangGraph pipeline** classifies your input, selects a demographic panel, runs persona reactions concurrently via LLM, aggregates sentiment, then optimizes your message and re-tests it
+1. **Describe your target audience** in plain language — "homeowners aged 30-55, $80K-$150K income, Ontario/BC/Alberta, values quality over brand names"
+2. **The agentic persona engine** searches a persistent database of personas, generates new ones to fill gaps using census data, and assembles the optimal focus group panel
+3. **A LangGraph pipeline** runs persona reactions concurrently via multiple LLMs, aggregates sentiment, optimizes your message, and re-tests it
 
 ```
-                          MAPLEPULSE — END-TO-END FLOW
+                     MAPLEPULSE — AGENTIC PERSONA ENGINE
   ═══════════════════════════════════════════════════════════════
 
-  MARKETER                         MAPLEPULSE ENGINE
-  ────────                         ─────────────────
+  USER INPUT                        ENGINE
+  ──────────                        ──────
 
-  ┌─────────────────────┐
-  │  Paste marketing     │
-  │  message, product    │
-  │  concept, survey Q,  │
-  │  or A/B copy         │
-  └──────────┬──────────┘
+  ┌───────────────────────┐
+  │  1. Audience brief     │
+  │     "Young parents in  │
+  │      suburban Ontario,  │
+  │      worried about     │
+  │      screen time"      │
+  │                        │
+  │  2. Content to test    │
+  │     "Screen-Free       │
+  │      Sundays — a new   │
+  │      family tradition" │
+  └──────────┬────────────┘
              │
              ▼
+  ┌══════════════════════════════════════════════════════════════┐
+  ║              PANEL-BUILDING AGENT (ReAct)                   ║
+  ║                                                             ║
+  ║  LLM orchestrator with tools — decides HOW to assemble     ║
+  ║  the optimal panel for each query                           ║
+  ║                                                             ║
+  ║  Tools available:                                           ║
+  ║  ┌─────────────────────────────────────────────────────┐    ║
+  ║  │ search_personas   → query SQLite DB for matches     │    ║
+  ║  │ generate_personas → create new targeted personas    │    ║
+  ║  │ fetch_data        → pull from 30+ Canadian sources  │    ║
+  ║  │ persist_personas  → cache new personas to DB        │    ║
+  ║  └─────────────────────────────────────────────────────┘    ║
+  ║                                                             ║
+  ║  Workflow:                                                  ║
+  ║  1. Parse audience brief → structured spec                  ║
+  ║  2. Search existing DB (5,000+ personas)                    ║
+  ║  3. Assess coverage — enough matches? Generate to fill gaps ║
+  ║  4. Fetch domain data (StatCan, Job Bank, 30+ sources)      ║
+  ║  5. Persist new personas for future reuse                   ║
+  ║  6. Compose final panel (existing + new)                    ║
+  ╚═══════════════╤════════════════════════════════════════════╝
+                  │  panel of 12-20 targeted personas
+                  ▼
+  ┌══════════════════════════════════════════════════════════════┐
+  ║              CONTEXT PROJECTION (per query)                  ║
+  ║                                                              ║
+  ║  LLM determines which persona attributes matter for THIS     ║
+  ║  query. Subagents get lean, focused prompts — not all 25+    ║
+  ║  fields. Health query → health fields. Social media →        ║
+  ║  digital behavior. Core demographics always included.        ║
+  ╚═══════════════╤══════════════════════════════════════════════╝
+                  │  projected persona contexts
+                  ▼
   ┌─────────────────────┐     ┌──────────────────────────────────┐
-  │  1. CLASSIFY INTENT │────▶│  LLM (temp=0) classifies input   │
-  │     (LangGraph)     │     │  into 1 of 4 use cases:          │
-  └──────────┬──────────┘     │                                  │
-             │                │  ● localization   (active)       │
-             │                │  ● product_concept (wip)         │
-             │                │  ● ab_copy_test    (wip)         │
-             │                │  ● survey_pretest  (wip)         │
-             │                └──────────────────────────────────┘
-             ▼
-  ┌─────────────────────┐     ┌──────────────────────────────────┐
-  │  2. SELECT PANEL    │────▶│  Sample N personas from 5,000    │
-  │                     │     │  Filters: province, age range    │
-  └──────────┬──────────┘     │  Deterministic seed for repro    │
-             │                └──────────────────────────────────┘
-             │
-             │                ┌──────────────────────────────────┐
-             │                │  PERSONA POOL (5,000)            │
-             │                │  ┌────────────────────────────┐  │
-             │                │  │ age: 42                    │  │
-             │                │  │ province: British Columbia  │  │
-             │                │  │ occupation: Elevator Mech.  │  │
-             │                │  │ income_bracket: $60K-$80K   │  │
-             │                │  │ cultural_bg: English-Cdn    │  │
-             │                │  │ languages: French           │  │
-             │                │  │ political: centre-left      │  │
-             │                │  │ concerns: housing, transit  │  │
-             │                │  │ ... 28 fields total         │  │
-             │                │  └────────────────────────────┘  │
-             │                └──────────────────────────────────┘
-             ▼
-  ┌─────────────────────┐     ┌──────────────────────────────────┐
-  │  3. RUN REACTIONS   │────▶│  For each persona (concurrent):  │
-  │     ROUND 1         │     │                                  │
-  │                     │     │  ┌────────────┐  ┌────────────┐  │
-  └──────────┬──────────┘     │  │ Persona 1  │  │ Persona 2  │  │
-             │                │  │   ┌─────┐  │  │   ┌─────┐  │  │
-             │                │  │   │ LLM │  │  │   │ LLM │  │  │
-             │                │  │   └──┬──┘  │  │   └──┬──┘  │  │
-             │                │  │      ▼     │  │      ▼     │  │
-             │                │  │ Structured │  │ Structured │  │
-             │                │  │  Output    │  │  Output    │  │
-             │                │  └────────────┘  └────────────┘  │
-             │                │       ... x 20 concurrent ...    │
+  │  REACT — ROUND 1    │────▶│  For each persona (concurrent):  │
+  │                     │     │  Multi-model fan-out:             │
+  └──────────┬──────────┘     │  gpt-5-nano, gemini-3-flash,     │
+             │                │  mistral-small, grok-3-mini ...   │
              │                │                                  │
              │                │  Each returns:                   │
-             │                │   reaction: "Sounds handy but    │
-             │                │     Metro aint in Van..."        │
-             │                │   _meta:                         │
-             │                │     sentiment_score: 6/10        │
-             │                │     resonates: true              │
-             │                │     tone_fit: acceptable         │
-             │                │     cultural_flags: [...]        │
+             │                │   reaction: "gut feeling text"   │
+             │                │   sentiment_score: 1-5           │
+             │                │   relevance: irrelevant/somewhat/│
+             │                │              directly_relevant   │
+             │                │   tone_fit: natural/acceptable/  │
+             │                │             awkward/offensive     │
+             │                │   cultural_flags: [...]           │
              │                └──────────────────────────────────┘
              ▼
   ┌─────────────────────┐     ┌──────────────────────────────────┐
-  │  4. AGGREGATE       │────▶│  DISPLAYED to marketer:          │
-  │     ROUND 1         │     │   20 persona reactions (quotes)  │
-  └──────────┬──────────┘     │                                  │
-             │                │  HIDDEN metadata:                │
-             │                │   avg sentiment: 6.8/10          │
-             │                │   resonance: 95%                 │
-             │                │   tone fit distribution          │
-             │                │   top cultural flags             │
+  │  AGGREGATE + SHOW   │────▶│  Sentiment distribution          │
+  └──────────┬──────────┘     │  Relevance breakdown             │
+             │                │  Tone fit distribution            │
+             │                │  Cultural flags                   │
              │                └──────────────────────────────────┘
              ▼
   ┌─────────────────────┐     ┌──────────────────────────────────┐
-  │  5. OPTIMIZE        │────▶│  LLM receives:                   │
-  │     MESSAGE         │     │   original message               │
-  │                     │     │   + all 20 verbatim reactions     │
-  └──────────┬──────────┘     │   + aggregated metadata          │
-             │                │                                  │
-             │                │  Outputs:                        │
-             │                │   improved_message (rewritten)   │
-             │                │   changes_made (list of fixes)   │
+  │  OPTIMIZE MESSAGE   │────▶│  LLM rewrites message based on   │
+  └──────────┬──────────┘     │  panel feedback + metadata        │
              │                └──────────────────────────────────┘
              ▼
-  ┌─────────────────────┐     ┌──────────────────────────────────┐
-  │  6. RUN REACTIONS   │────▶│  SAME panel, SAME prompts        │
-  │     ROUND 2         │     │  but with the OPTIMIZED message  │
-  │                     │     │  20 concurrent LLM calls again   │
-  └──────────┬──────────┘     └──────────────────────────────────┘
+  ┌─────────────────────┐
+  │  REACT — ROUND 2    │     Same panel, optimized message
+  └──────────┬──────────┘
              ▼
   ┌─────────────────────┐     ┌──────────────────────────────────┐
-  │  7. AGGREGATE v2    │────▶│  BEFORE / AFTER COMPARISON       │
-  │     + COMPARE       │     │                                  │
-  └──────────┬──────────┘     │  Metric          R1    R2  Delta │
-             │                │  ─────────────────────────────── │
-             │                │  Avg Sentiment   6.8   7.5  +0.7 │
-             │                │  Resonance %      95   100   +5% │
-             │                │  Cultural Flags   12     3    -9 │
-             │                │  Tone: perfect     7    14    +7 │
+  │  COMPARE            │────▶│  BEFORE / AFTER                  │
+  └──────────┬──────────┘     │  Sentiment delta                 │
+             │                │  Relevance improvement           │
+             │                │  Cultural flags resolved          │
              │                └──────────────────────────────────┘
              ▼
   ┌─────────────────────┐
   │  MARKETER RECEIVES: │
-  │                     │
-  │  ● Original message │
-  │  ● Optimized message│
+  │  ● Original + opt.  │
   │  ● List of changes  │
   │  ● 40 reactions     │
-  │    (20 per round)   │
   │  ● Before/after     │
-  │    comparison table  │
   │  ● Cultural flags   │
-  │    & regional issues │
   └─────────────────────┘
 
 
   DATA FOUNDATION
   ═══════════════
 
-  Statistics Canada          Job Bank Canada         Other Sources
-  2021 Census                2025 Wages CSV          ─────────────
-  ─────────────              ──────────────          CES (political)
-  province, age, sex         516 NOC codes           Angus Reid (concerns)
-  education, housing         low/median/high wage    Environics (values)
-  immigration, Indigenous    by province             Journey to Work
-  visible minority, language
-  marital status, religion
-            │                      │                       │
-            └──────────┬───────────┘───────────────────────┘
-                       ▼
-              ┌─────────────────┐
-              │  5,000 PERSONAS │
-              │  28 fields each │
-              │  seed=42 repro  │
-              └─────────────────┘
-```
-
-## Future State: Hierarchical Multi-Agent Architecture
-
-```
-                    MAPLEPULSE v2 — HIERARCHICAL MULTI-AGENT
-  ═══════════════════════════════════════════════════════════════
-
-  Key changes from v1:
-    - Single LLM pretending to be 20 people  -->  20 independent subagents
-    - One model (GPT-5-mini)                 -->  Multi-model (GPT-5-mini, Gemini 3 Flash, etc.)
-    - Workflow (fixed pipeline)              -->  Orchestrator with agency + delegation
-
-
-  MARKETER
-  ────────
-  ┌─────────────────────┐
-  │  Paste marketing     │
-  │  message / concept   │
-  └──────────┬──────────┘
-             │
-             ▼
-  ┌══════════════════════════════════════════════════════════════┐
-  ║                   ORCHESTRATOR AGENT                        ║
-  ║  (manages the overall goal, delegates, tracks progress)     ║
-  ║                                                             ║
-  ║  Responsibilities:                                          ║
-  ║  - Classify intent (use case routing)                       ║
-  ║  - Select panel composition strategy                        ║
-  ║  - Spawn persona subagents with model assignments           ║
-  ║  - Collect raw reactions                                    ║
-  ║  - Aggregate results                                        ║
-  ║  - Generate optimized message                               ║
-  ║  - Spawn Round 2 subagents with optimized message           ║
-  ║  - Compile before/after comparison                          ║
-  ║  - Return final report to marketer                          ║
-  ║                                                             ║
-  ║  Model: GPT-5-mini (cheap, fast orchestration)              ║
-  ║  Context: clean — delegates all persona work to subagents   ║
-  ╚═══════════════╤════════════════════════════════╤════════════╝
-                  │                                │
-          ┌───────┘                                └───────┐
-          │  spawn N stateless subagents                   │
-          ▼                                                ▼
-
-  ┌─────────────────────────────────────────────────────────────┐
-  │              PERSONA SUBAGENTS (stateless)                  │
-  │                                                             │
-  │  Each subagent:                                             │
-  │  - Receives ONE persona profile + the marketing message     │
-  │  - Has NO memory of other personas (no context rot)         │
-  │  - Returns structured reaction + metadata                   │
-  │  - Dies after responding (stateless)                        │
-  │                                                             │
-  │  Multi-model assignment (round-robin or stratified):        │
-  │                                                             │
-  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-  │  │Persona 1 │ │Persona 2 │ │Persona 3 │ │Persona 4 │  ...  │
-  │  │          │ │          │ │          │ │          │       │
-  │  │GPT-5-mini│ │Gemini 3  │ │GPT-5-mini│ │Gemini 3  │       │
-  │  │          │ │  Flash   │ │          │ │  Flash   │       │
-  │  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘       │
-  │       │            │            │            │              │
-  │       ▼            ▼            ▼            ▼              │
-  │   reaction     reaction     reaction     reaction           │
-  │   + _meta      + _meta      + _meta      + _meta            │
-  │   + model_id   + model_id   + model_id   + model_id         │
-  │                                                             │
-  │  Why multi-model?                                           │
-  │  - Different LLMs have different "personalities" & biases   │
-  │  - Reduces monoculture risk (all reactions sounding same)   │
-  │  - Cheap models: ~$0.001/reaction, cost is negligible       │
-  └──────────────────────────┬──────────────────────────────────┘
-                             │
-                             │  raw reactions collected
-                             ▼
-  ┌══════════════════════════════════════════════════════════════┐
-  ║                   ORCHESTRATOR AGENT                        ║
-  ║                   (aggregation + optimization)              ║
-  ║                                                             ║
-  ║  1. Aggregate Round 1 results                               ║
-  ║     - Display persona reactions (quotes)                    ║
-  ║     - Compute hidden metadata (sentiment, flags, tone)      ║
-  ║     - Track which model produced which reaction             ║
-  ║                                                             ║
-  ║  2. Generate optimized message                              ║
-  ║     - Feed original + reactions + metadata to LLM           ║
-  ║     - Produce rewritten message + list of changes           ║
-  ║                                                             ║
-  ║  3. Spawn Round 2 subagents                                 ║
-  ║     - SAME panel, SAME model assignments                    ║
-  ║     - OPTIMIZED message as input                            ║
-  ║                                                             ║
-  ║  4. Aggregate Round 2 + before/after comparison             ║
-  ╚═══════════════════════════╤═════════════════════════════════╝
-                              │
-                              ▼
-  ┌─────────────────────────────────────────────────────────────┐
-  │                    MARKETER RECEIVES                        │
-  │                                                             │
-  │  ● Original message + optimized message                     │
-  │  ● List of changes made                                     │
-  │  ● 40 persona reactions (20 per round)                      │
-  │  ● Before/after comparison table                            │
-  │  ● Model diversity breakdown (which LLM said what)          │
-  │  ● Cultural flags & regional issues                         │
-  └─────────────────────────────────────────────────────────────┘
-
-
-  FUTURE: CRITIC AGENT (on hold)
-  ═══════════════════════════════
-  When needed (100+ persona panels, paying customers, trust signals):
-  - Dedicated evaluator agent between subagents and aggregation
-  - Checks for: positivity bias, sycophancy, persona inconsistency,
-    duplicate responses, hallucinated brands, model-specific patterns
-  - Outputs: confidence score, bias report, flagged reactions
-  - Can trigger re-runs of flagged personas on a different model
-
-
-  ARCHITECTURE COMPARISON
-  ═══════════════════════
-
-  v1 (Current — Workflow)          v2 (Future — Hierarchical Multi-Agent)
-  ─────────────────────────        ─────────────────────────────────────
-  Single LangGraph pipeline        Orchestrator + Subagents
-  1 model per run                  Multiple models (GPT-5, Gemini 3, etc.)
-  1 LLM call = 1 persona           1 subagent = 1 persona (isolated)
-  All personas share context       Each subagent: clean context window
-  Fixed 2-round loop               Orchestrator decides flow
-  ~20 concurrent calls             ~20 concurrent subagent spawns
-  Same model = same blind spots    Model diversity = different perspectives
+  ┌──────────────────────────────────────────────────────────────┐
+  │                    PERSONA DB (SQLite)                       │
+  │                                                              │
+  │  Seed: 5,000 census-grounded personas                        │
+  │  Grows organically with each query                           │
+  │                                                              │
+  │  Indexed by: province, age, income, education, occupation,   │
+  │  political leaning, religion, concerns, domain context       │
+  │  FTS5 search on: occupation, concerns, domain, audience tags │
+  └──────────────────────────────────────────────────────────────┘
+         ▲                    ▲                    ▲
+         │                    │                    │
+  ┌──────┴────────┐   ┌──────┴──────┐   ┌────────┴──────────┐
+  │ Statistics     │   │ Job Bank    │   │ 28+ Other Sources  │
+  │ Canada 2021   │   │ 2025 Wages  │   │ CES, Angus Reid,   │
+  │ Census        │   │ 516 NOC     │   │ Environics, CMHC,   │
+  │               │   │ codes       │   │ CIRA, CCHS ...      │
+  └───────────────┘   └─────────────┘   └────────────────────┘
 ```
 
 ## Use Cases
 
 | Use Case | Status | Description |
 |----------|--------|-------------|
-| Localization | Active | Test how a marketing message lands across Canadian regions |
-| Product Concept | WIP | Get reactions to a product/service idea |
-| A/B Copy Test | WIP | Compare two versions of ad copy |
-| Survey Pre-Test | WIP | Test survey questions for clarity and bias |
+| Content localization | Active | Test how a message lands across Canadian regions |
+| Product concept test | Planned | Get reactions to a product/service idea |
+| A/B copy test | Planned | Compare two versions of ad copy |
+| Survey pre-test | Planned | Test survey questions for clarity and bias |
+
+## Architecture
+
+| Component | Tech | Status |
+|-----------|------|--------|
+| Frontend | Next.js 15 + Tailwind CSS v4 + TypeScript | Done |
+| Backend API | FastAPI + LangGraph + SSE streaming | Done |
+| Persona generation | Python + census data + LLM enrichment | Done |
+| Multi-model reactions | OpenRouter (5 LLM providers) | Done |
+| Anti-sycophancy scoring | 1-5 anchored scale + calibration prompts | Done |
+| Observability | Langfuse tracing + cost tracking | Done |
+| Agentic persona engine | LangGraph ReAct agent + tools | Planned (Phase 4) |
+| Context projection | LLM selects relevant attributes per query | Planned (Phase 4) |
+| Persona DB | SQLite with FTS5 + extended_attributes JSON | Planned (Phase 4) |
+| Deterministic panel builder | Cultural holidays, life events, smart relaxation | Done |
 
 ## Project Structure
 
 ```
-scripts/
-  generate_canada_personas.py   # Generate personas from census data (skeleton + LLM enrichment)
-  map_occupations_to_noc.py     # Map occupations to NOC 2021 codes via LLM
-  enrich_personas_income.py     # Enrich personas with Job Bank 2025 wage data
+backend/
+  main.py                         # FastAPI + LangGraph backend (SSE, 5 endpoints, multi-model)
 
-canada_demographics_2021.py     # Statistics Canada 2021 Census data as probability weights
+frontend/
+  src/app/page.tsx                # 8-step workflow state machine
+  src/components/                 # UI components (panel, reactions, summary, comparison)
+  src/lib/api.ts                  # SSE streaming client to backend
+  src/lib/types.ts                # TypeScript types
+
+scripts/
+  generate_canada_personas.py     # Census-grounded persona generator (25 fields)
+  enrich_personas_income.py       # Job Bank 2025 wage enrichment
+  map_occupations_to_noc.py       # Occupation → NOC code mapping via LLM
+
+canada_demographics_2021.py       # Statistics Canada 2021 Census probability weights
 
 data/
-  personas_5000.json            # Generated persona dataset
-  occupation_noc_mapping.json   # Occupation → NOC code mappings
-  raw/                          # Source CSVs (Job Bank wages, etc.)
-
-experiments/
-  01_focus_group_test.ipynb     # LangGraph focus group pipeline notebook
-  run_test1.py                  # Standalone test script
+  personas_5000.json              # 5,000 seed personas
+  occupation_noc_mapping.json     # Occupation → NOC code mappings
+  raw/                            # Source CSVs (Job Bank wages, etc.)
 
 docs/
-  Plan.md                      # Research on Canadian persona data sources
-  Learning.md                  # How Ask Singapore works (architecture deep dive)
-  NextSteps.md                 # Phased implementation plan
-  DataSources.md               # 30+ public Canadian data sources catalog
-  Progress.md                  # Session-by-session progress log
+  MaplePulse-Plan.md              # Product plan + phased implementation
+  NextSteps.md                    # Current priorities and roadmap
+  DataSources.md                  # 30+ Canadian data sources catalog
+  v3_architecture_sketch.py       # Agentic persona engine design sketch
+  v2_architecture_sketch.py       # Multi-agent architecture (superseded)
+  Progress.md                     # Session-by-session progress log
+  Learning.md                     # How Ask Singapore works
 
-ask-singapore/                  # Cloned reference project
+docker-compose.yml                # 3 services: backend :8000, frontend :3000, notebook :8888
 ```
 
 ## Persona Fields
 
-Each persona includes 28 fields grounded in census distributions:
+Each persona includes 25+ fields grounded in census distributions:
 
-| Field | Source |
-|-------|--------|
-| age, sex, marital_status | Census 2021 |
-| province, planning_area (CMA) | Census 2021 population weights |
-| occupation | NOC broad categories + exemplar job titles |
-| education_level | Census 2021 (25-64 working age) |
-| immigration_status | Census 2021 |
-| indigenous_identity | Census 2021 |
-| visible_minority | Census 2021 |
-| languages_spoken | Province-aware (QC=French-dominant, NB=bilingual) |
-| housing | Census 2021 tenure + dwelling type |
-| cultural_background | 15+ ethnic/cultural group templates |
-| political_leaning | CES/Angus Reid, province-weighted, age-adjusted |
-| religion | Census 2021, visible minority-correlated |
-| top_concerns | Province-specific (Angus Reid, Environics, CoT surveys) |
-| commute_mode | Census 2021 Journey to Work, urban/rural split |
-| noc_code, noc_title | NOC 2021 (LLM-mapped from occupation) |
-| estimated_annual_income | Job Bank 2025 wages by NOC + province, age-adjusted |
-| income_bracket | Derived: Under $20K / $20K-$40K / ... / $150K+ |
-| is_employed | Derived from occupation type |
-| persona, skills_and_expertise, hobbies_and_interests, career_goals_and_ambitions | LLM-enriched |
-
-## Tech Stack
-
-- **LangGraph** - Pipeline orchestration with optimization loop
-- **LangChain + OpenRouter** - LLM calls (Gemini, GPT-5 via OpenRouter)
-- **Langfuse** - Observability and tracing
-- **Pydantic** - Structured output schemas
-- **Python + asyncio** - Concurrent persona reactions
+| Category | Fields | Source |
+|----------|--------|--------|
+| Core demographics | age, sex, marital_status, province, city | Census 2021 |
+| Employment | occupation, noc_code, is_employed | Census 2021 + NOC |
+| Income | estimated_annual_income, income_bracket, income_source | Job Bank 2025 wages |
+| Education | education_level | Census 2021 |
+| Identity | immigration_status, indigenous_identity, visible_minority, cultural_background | Census 2021 |
+| Language | languages_spoken | Province-aware (QC=French, NB=bilingual) |
+| Housing | housing, commute_mode | Census 2021 Journey to Work |
+| Attitudes | political_leaning, religion, top_concerns | CES, Angus Reid, Environics |
+| LLM-enriched | personality, skills, hobbies, career_goals | Claude / Anthropic |
+| Extended (selective) | health, digital behavior, financial, civic, lifestyle, values, consumer | CCHS, CIRA, CFCS, GSS, Environics, etc. — populated per query via context projection |
 
 ## Quick Start
 
 ```bash
+# Run all services with Docker
+docker compose up
+
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:8000
+# Notebook: http://localhost:8888
+
 # Generate skeleton personas (no API key needed)
 python scripts/generate_canada_personas.py --count 50 --skeleton-only
-
-# Generate with LLM enrichment (requires ANTHROPIC_API_KEY)
-python scripts/generate_canada_personas.py --count 5000
-
-# Run the focus group pipeline (requires OPENROUTER_API_KEY + LANGFUSE keys)
-# See experiments/01_focus_group_test.ipynb
 ```
+
+**Environment variables needed:**
+- `OPENROUTER_API_KEY` — for multi-model LLM reactions
+- `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` — for observability
+
+## Roadmap
+
+See [docs/NextSteps.md](docs/NextSteps.md) for full details.
+
+- **Phase 4 (current priority):** Agentic Persona Engine — SQLite DB, audience brief parser, dynamic persona generation with tool-calling agent, context projection (lean subagent prompts), deterministic panel builder with cultural/life-event maps, persistent caching
+- **Phase 5:** Remaining use cases (product concept, A/B copy, survey pre-test)
+- **Phase 6:** Frontend polish (A/B comparison view, PDF/CSV export, audience brief input)
+- **Phase 7:** Geography & map (Canadian GeoJSON, sentiment by region)
+- **Phase 8:** Deploy (branding, rate limiting, Vercel)
 
 ## Attribution
 
-- **Aayush Mathur** - Original [Ask Singapore](https://github.com/AayushMathur7/ask-singapore) project
-- **Statistics Canada** - 2021 Census of Population demographic data
-- **NVIDIA** - Nemotron-Personas methodology inspiration
-- **Job Bank Canada** - 2025 wage data for income enrichment
+- **Aayush Mathur** — Original [Ask Singapore](https://github.com/AayushMathur7/ask-singapore) project
+- **Statistics Canada** — 2021 Census of Population demographic data
+- **NVIDIA** — Nemotron-Personas methodology inspiration
+- **Job Bank Canada** — 2025 wage data for income enrichment

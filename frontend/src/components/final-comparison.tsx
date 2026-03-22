@@ -21,9 +21,15 @@ import { submitFeedback } from "@/lib/api";
 
 type DiffToken = { text: string; type: "equal" | "removed" | "added"; group?: number };
 
+function normalizeQuotes(text: string): string {
+  return text
+    .replace(/[\u2018\u2019\u2032]/g, "'")   // curly single quotes → straight
+    .replace(/[\u201C\u201D\u2033]/g, '"');   // curly double quotes → straight
+}
+
 function computeWordDiff(oldText: string, newText: string): { removed: DiffToken[]; added: DiffToken[] } {
-  const oldWords = oldText.split(/(\s+)/);
-  const newWords = newText.split(/(\s+)/);
+  const oldWords = normalizeQuotes(oldText).split(/(\s+)/);
+  const newWords = normalizeQuotes(newText).split(/(\s+)/);
 
   // LCS table
   const m = oldWords.length;
@@ -81,7 +87,7 @@ function computeWordDiff(oldText: string, newText: string): { removed: DiffToken
 
     // Second pass: merge adjacent groups separated by ≤ MAX_BRIDGE_WORDS real words
     // This prevents fragmentation when LCS misaligns common short words
-    const MAX_BRIDGE_WORDS = 3;
+    const MAX_BRIDGE_WORDS = 6;
     let merged = true;
     while (merged) {
       merged = false;
@@ -263,41 +269,17 @@ function DeltaCard({
   const deltaStr = delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
 
   return (
-    <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
-      <p className="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wide mb-2">
-        {label}
-      </p>
-      <div className="flex items-end gap-3">
-        <div>
-          <p className="text-xs text-[var(--color-text-light)]">Before</p>
-          <p className="text-lg font-mono font-semibold text-[var(--color-text-muted)]">
-            {before.toFixed(1)}
-            {unit}
-          </p>
-        </div>
-        <ArrowRight size={16} className="text-[var(--color-text-light)] mb-2" />
-        <div>
-          <p className="text-xs text-[var(--color-text-light)]">After</p>
-          <p
-            className={cn(
-              "text-lg font-mono font-semibold",
-              improved ? "text-emerald-600" : "text-red-500"
-            )}
-          >
-            {after.toFixed(1)}
-            {unit}
-          </p>
-        </div>
-        <div
-          className={cn(
-            "flex items-center gap-0.5 text-sm font-mono font-medium ml-auto mb-1",
-            improved ? "text-emerald-600" : "text-red-500"
-          )}
-        >
-          {improved ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-          {deltaStr}
-          {unit}
-        </div>
+    <div className="bg-[var(--color-bg-card)] rounded-lg border border-[var(--color-border)] p-3">
+      <p className="text-xs text-[var(--color-text-muted)] mb-1">{label}</p>
+      <div className="flex items-baseline gap-2">
+        <span className="text-[var(--color-text-light)] font-mono text-sm">{before.toFixed(1)}{unit}</span>
+        <ArrowRight size={12} className="text-[var(--color-text-light)]" />
+        <span className={cn("font-mono text-lg font-semibold", improved ? "text-emerald-600" : "text-red-500")}>
+          {after.toFixed(1)}{unit}
+        </span>
+        <span className={cn("text-xs font-mono ml-auto", improved ? "text-emerald-600" : "text-red-500")}>
+          {deltaStr}{unit}
+        </span>
       </div>
     </div>
   );
@@ -349,24 +331,17 @@ export function FinalComparison({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-            <Trophy size={20} className="text-amber-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold font-[family-name:var(--font-heading)]">
-              Final Results
-            </h2>
-            <p className="text-sm text-[var(--color-text-muted)]">
-              Before vs. After optimization — same panel, same personas
-            </p>
-          </div>
+        <div>
+          <h2 className="text-base font-semibold">Final Results</h2>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Before vs. after optimization
+          </p>
         </div>
         <button
           onClick={onRestart}
-          className="flex items-center gap-2 px-4 py-2 border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-surface)] rounded-lg text-sm font-medium transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-3 py-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] rounded-lg text-sm font-medium transition-colors cursor-pointer"
         >
-          <RotateCcw size={16} />
+          <RotateCcw size={14} />
           New Test
         </button>
       </div>
@@ -403,61 +378,34 @@ export function FinalComparison({
         />
       </div>
 
-      {/* Diff view — Diffchecker style */}
-      <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
-        {/* Diff header */}
+      {/* Diff view */}
+      <div className="bg-[var(--color-bg-card)] rounded-lg border border-[var(--color-border)] overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 border-b border-[var(--color-border)]">
-          <div className="flex items-center justify-between px-5 py-3 border-b lg:border-b-0 lg:border-r border-[var(--color-border)] bg-red-50/50">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-400" />
-              <span className="text-sm font-semibold text-red-700">Original</span>
-            </div>
-            <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
-              <span>Sentiment: <strong className="text-red-500">{round1.avg_sentiment.toFixed(1)}/5</strong></span>
-              <span>Relevance: <strong className="text-red-500">{round1.relevance_pct}%</strong></span>
-            </div>
+          <div className="flex items-center gap-2 px-4 py-2 border-b lg:border-b-0 lg:border-r border-[var(--color-border)]">
+            <div className="w-2 h-2 rounded-full bg-red-400" />
+            <span className="text-xs font-medium text-[var(--color-text-muted)]">Original</span>
           </div>
-          <div className="flex items-center justify-between px-5 py-3 bg-emerald-50/50">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-400" />
-              <span className="text-sm font-semibold text-emerald-700">Optimized</span>
-            </div>
-            <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
-              <span>Sentiment: <strong className="text-emerald-600">{round2.avg_sentiment.toFixed(1)}/5</strong></span>
-              <span>Relevance: <strong className="text-emerald-600">{round2.relevance_pct}%</strong></span>
-            </div>
+          <div className="flex items-center gap-2 px-4 py-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="text-xs font-medium text-[var(--color-text-muted)]">Optimized</span>
           </div>
         </div>
 
-        {/* Diff body */}
         <div className="grid grid-cols-1 lg:grid-cols-2">
-          <div className="px-5 py-4 border-b lg:border-b-0 lg:border-r border-[var(--color-border)] bg-red-50/20">
+          <div className="px-4 py-3 border-b lg:border-b-0 lg:border-r border-[var(--color-border)]">
             <DiffLine tokens={diff.removed} side="removed" />
           </div>
-          <div className="px-5 py-4 bg-emerald-50/20">
+          <div className="px-4 py-3">
             <DiffLine tokens={diff.added} side="added" />
           </div>
         </div>
-
-        {/* Change count summary bar */}
-        <div className="px-5 py-2.5 border-t border-[var(--color-border)] bg-[var(--color-surface)] flex items-center gap-4 text-xs text-[var(--color-text-muted)]">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-300" />
-            {diff.removed.filter(t => t.type === "removed").length} words removed
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-300" />
-            {diff.added.filter(t => t.type === "added").length} words added
-          </span>
-          <span>{totalGroups} change region{totalGroups !== 1 ? "s" : ""}</span>
-        </div>
       </div>
 
-      {/* Change annotations — tagged to feedback */}
+      {/* Change annotations */}
       {totalGroups > 0 && (
-        <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-5 shadow-sm">
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
-            Change Annotations
+        <div className="bg-[var(--color-bg-card)] rounded-lg border border-[var(--color-border)] p-4">
+          <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">
+            Changes
           </p>
           <div className="space-y-2.5">
             {Array.from({ length: totalGroups }, (_, i) => i + 1).map((groupNum) => {
@@ -508,83 +456,144 @@ export function FinalComparison({
       )}
 
       {/* Improvement summary */}
-      <div
-        className={cn(
-          "rounded-xl border p-5",
-          sentimentDelta > 0
-            ? "bg-emerald-50 border-emerald-200"
-            : sentimentDelta < 0
-            ? "bg-red-50 border-red-200"
-            : "bg-gray-50 border-gray-200"
-        )}
-      >
-        <div className="flex items-center gap-2 mb-2">
-          {sentimentDelta > 0 ? (
-            <TrendingUp size={18} className="text-emerald-600" />
-          ) : sentimentDelta < 0 ? (
-            <TrendingDown size={18} className="text-red-500" />
-          ) : (
-            <AlertTriangle size={18} className="text-amber-500" />
-          )}
-          <p className="font-semibold text-sm">
-            {sentimentDelta > 0
-              ? `Sentiment improved by ${sentimentDelta.toFixed(1)} points (${((sentimentDelta / round1.avg_sentiment) * 100).toFixed(0)}% increase)`
-              : sentimentDelta < 0
-              ? `Sentiment decreased by ${Math.abs(sentimentDelta).toFixed(1)} points`
-              : "Sentiment unchanged between rounds"}
-          </p>
-        </div>
-        <p className="text-sm text-[var(--color-text-muted)]">
-          {relevanceDelta !== 0
-            ? `Relevance ${relevanceDelta > 0 ? "improved" : "dropped"} from ${round1.relevance_pct}% to ${round2.relevance_pct}% (${relevanceDelta > 0 ? "+" : ""}${relevanceDelta}pp).`
-            : `Relevance held steady at ${round1.relevance_pct}%.`}
-          {" "}
-          {(() => {
-            const flagsBefore = round1.top_cultural_flags.length;
-            const flagsAfter = round2.top_cultural_flags.length;
-            if (flagsAfter < flagsBefore) return `Cultural flags reduced from ${flagsBefore} to ${flagsAfter}.`;
-            if (flagsAfter > flagsBefore) return `Cultural flags increased from ${flagsBefore} to ${flagsAfter}.`;
-            return flagsBefore === 0 ? "No cultural flags in either round." : `Cultural flags unchanged (${flagsBefore}).`;
-          })()}
-        </p>
-      </div>
+      {(() => {
+        const naturalBefore = round1.tone_distribution.natural || 0;
+        const naturalAfter = round2.tone_distribution.natural || 0;
+        const naturalDelta = naturalAfter - naturalBefore;
+        const awkwardBefore = round1.tone_distribution.awkward || 0;
+        const awkwardAfter = round2.tone_distribution.awkward || 0;
+        const awkwardDelta = awkwardAfter - awkwardBefore;
+        const flagsBefore = round1.top_cultural_flags.length;
+        const flagsAfter = round2.top_cultural_flags.length;
+
+        // Collect wins and losses
+        const wins: string[] = [];
+        const losses: string[] = [];
+        const neutral: string[] = [];
+
+        // Sentiment
+        if (sentimentDelta > 0.05) wins.push(`Sentiment improved by ${sentimentDelta.toFixed(1)} points`);
+        else if (sentimentDelta < -0.05) losses.push(`Sentiment dipped by ${Math.abs(sentimentDelta).toFixed(1)} points`);
+        else neutral.push("Sentiment held steady");
+
+        // Relevance
+        if (relevanceDelta > 0) wins.push(`Relevance up ${relevanceDelta}pp to ${round2.relevance_pct}%`);
+        else if (relevanceDelta < 0) losses.push(`Relevance down ${Math.abs(relevanceDelta)}pp to ${round2.relevance_pct}%`);
+        else neutral.push(`Relevance steady at ${round1.relevance_pct}%`);
+
+        // Natural tone
+        if (naturalDelta > 0) wins.push(`Natural tone up ${naturalDelta.toFixed(0)}pp to ${naturalAfter.toFixed(0)}%`);
+        else if (naturalDelta < 0) losses.push(`Natural tone down ${Math.abs(naturalDelta).toFixed(0)}pp`);
+
+        // Awkward tone
+        if (awkwardDelta < 0) wins.push(`Awkward tone reduced from ${awkwardBefore.toFixed(0)}% to ${awkwardAfter.toFixed(0)}%`);
+        else if (awkwardDelta > 0) losses.push(`Awkward tone increased to ${awkwardAfter.toFixed(0)}%`);
+        else if (awkwardBefore === 0 && awkwardAfter === 0) {} // skip if both zero
+
+        // Cultural flags
+        if (flagsAfter < flagsBefore) wins.push(`Cultural flags reduced from ${flagsBefore} to ${flagsAfter}`);
+        else if (flagsAfter > flagsBefore) losses.push(`Cultural flags increased from ${flagsBefore} to ${flagsAfter}`);
+        else if (flagsBefore === 0) {} // skip if none
+
+        // Overall verdict
+        const overallPositive = wins.length > losses.length;
+        const allNeutral = wins.length === 0 && losses.length === 0;
+
+        return (
+          <div
+            className={cn(
+              "rounded-xl border p-5",
+              overallPositive
+                ? "bg-emerald-50 border-emerald-200"
+                : allNeutral
+                ? "bg-gray-50 border-gray-200"
+                : wins.length === losses.length
+                ? "bg-amber-50 border-amber-200"
+                : "bg-red-50 border-red-200"
+            )}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              {overallPositive ? (
+                <TrendingUp size={18} className="text-emerald-600" />
+              ) : allNeutral ? (
+                <Minus size={18} className="text-gray-500" />
+              ) : wins.length === losses.length ? (
+                <AlertTriangle size={18} className="text-amber-500" />
+              ) : (
+                <TrendingDown size={18} className="text-red-500" />
+              )}
+              <p className="font-semibold text-sm">
+                {overallPositive
+                  ? `Optimization improved ${wins.length} metric${wins.length !== 1 ? "s" : ""}`
+                  : allNeutral
+                  ? "No significant changes between rounds"
+                  : wins.length === losses.length
+                  ? "Mixed results — some metrics improved, others declined"
+                  : `${losses.length} metric${losses.length !== 1 ? "s" : ""} declined`}
+              </p>
+            </div>
+            {wins.length > 0 && (
+              <div className="flex flex-wrap gap-x-1 text-sm text-emerald-700 mb-1">
+                <span className="font-medium">Improved:</span>
+                {wins.map((w, i) => (
+                  <span key={i}>
+                    {w}{i < wins.length - 1 ? "." : "."}
+                  </span>
+                ))}
+              </div>
+            )}
+            {losses.length > 0 && (
+              <div className="flex flex-wrap gap-x-1 text-sm text-red-600 mb-1">
+                <span className="font-medium">Declined:</span>
+                {losses.map((l, i) => (
+                  <span key={i}>
+                    {l}{i < losses.length - 1 ? "." : "."}
+                  </span>
+                ))}
+              </div>
+            )}
+            {neutral.length > 0 && (
+              <div className="flex flex-wrap gap-x-1 text-sm text-[var(--color-text-muted)]">
+                <span className="font-medium">Unchanged:</span>
+                {neutral.map((n, i) => (
+                  <span key={i}>
+                    {n}{i < neutral.length - 1 ? "." : "."}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
 
       {/* Feedback */}
       {traceId && (
-        <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-5 shadow-sm">
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
-            How was this optimization?
-          </p>
+        <div className="flex items-center gap-3 pt-2">
+          <span className="text-xs text-[var(--color-text-muted)]">Rate this result:</span>
           {feedbackSent ? (
-            <div className="flex items-center gap-2 text-sm text-emerald-600">
-              <Check size={16} />
-              <span>
-                Feedback recorded: <strong>{feedbackSent}</strong>
-              </span>
-            </div>
+            <span className="text-xs text-emerald-600 flex items-center gap-1">
+              <Check size={12} /> {feedbackSent}
+            </span>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleFeedback("good")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 text-sm font-medium transition-colors cursor-pointer"
+                className="p-1.5 rounded-md text-[var(--color-text-light)] hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
               >
-                <ThumbsUp size={16} />
-                Good
+                <ThumbsUp size={14} />
               </button>
               <button
                 onClick={() => handleFeedback("partial")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 text-sm font-medium transition-colors cursor-pointer"
+                className="p-1.5 rounded-md text-[var(--color-text-light)] hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
               >
-                <Minus size={16} />
-                Partial
+                <Minus size={14} />
               </button>
               <button
                 onClick={() => handleFeedback("bad")}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 text-sm font-medium transition-colors cursor-pointer"
+                className="p-1.5 rounded-md text-[var(--color-text-light)] hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
               >
-                <ThumbsDown size={16} />
-                Bad
+                <ThumbsDown size={14} />
               </button>
             </div>
           )}

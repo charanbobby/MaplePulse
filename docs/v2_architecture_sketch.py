@@ -5,6 +5,11 @@ subagents using LangGraph's Send() pattern with multi-model assignment.
 
 This is a DESIGN SKETCH, not runnable code. It shows the framework
 pattern and key decisions before full implementation.
+
+NOTE (2026-03-21): This sketch has been SUPERSEDED by:
+- backend/main.py — the actual v2 implementation (FastAPI + LangGraph)
+- docs/v3_architecture_sketch.py — the v3 agentic persona engine design
+  that replaces static panel filtering with dynamic tool-calling agent
 """
 
 import operator

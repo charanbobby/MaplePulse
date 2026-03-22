@@ -5,7 +5,6 @@ import {
   TrendingDown,
   AlertTriangle,
   BarChart3,
-  Users,
   ArrowRight,
 } from "lucide-react";
 import type { AggregatedResults, Reaction } from "@/lib/types";
@@ -21,17 +20,18 @@ function MetricCard({
   value: string;
   subtext?: string;
   color: string;
+  description?: string;
 }) {
   return (
-    <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
-      <p className="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wide mb-1">
+    <div className="bg-[var(--color-bg-card)] rounded-lg border border-[var(--color-border)] p-3">
+      <p className="text-xs text-[var(--color-text-muted)] mb-0.5">
         {label}
       </p>
-      <p className={cn("text-2xl font-bold font-[family-name:var(--font-mono)]", color)}>
+      <p className={cn("text-xl font-semibold font-[family-name:var(--font-mono)]", color)}>
         {value}
       </p>
       {subtext && (
-        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtext}</p>
+        <p className="text-[11px] text-[var(--color-text-light)] mt-0.5">{subtext}</p>
       )}
     </div>
   );
@@ -73,11 +73,11 @@ function SentimentDistribution({ reactions }: { reactions: Reaction[] }) {
   const total = reactions.length;
 
   return (
-    <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
-      <p className="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wide mb-3">
+    <div className="bg-[var(--color-bg-card)] rounded-lg border border-[var(--color-border)] p-3">
+      <p className="text-xs text-[var(--color-text-muted)] mb-2">
         Sentiment Distribution
       </p>
-      <div className="flex h-6 rounded-full overflow-hidden">
+      <div className="flex h-4 rounded-full overflow-hidden">
         {positive > 0 && (
           <div
             className="bg-emerald-500 transition-all duration-700"
@@ -97,10 +97,10 @@ function SentimentDistribution({ reactions }: { reactions: Reaction[] }) {
           />
         )}
       </div>
-      <div className="flex justify-between mt-2 text-xs">
-        <span className="text-emerald-600">Positive: {positive}</span>
-        <span className="text-amber-600">Neutral: {neutral}</span>
-        <span className="text-red-500">Negative: {negative}</span>
+      <div className="flex justify-between mt-1.5 text-[11px]">
+        <span className="text-emerald-600">{positive} positive</span>
+        <span className="text-amber-600">{neutral} neutral</span>
+        <span className="text-red-500">{negative} negative</span>
       </div>
     </div>
   );
@@ -144,28 +144,28 @@ export function SummaryView({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold font-[family-name:var(--font-heading)]">
+          <h2 className="text-base font-semibold">
             Round {round} Summary
           </h2>
-          <p className="text-sm text-[var(--color-text-muted)]">
-            Aggregated results from {reactions.length} persona reactions
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {reactions.length} reactions
           </p>
         </div>
         <button
           onClick={onContinue}
           disabled={!canContinue}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 text-white rounded-lg text-sm font-medium transition-colors",
+            "flex items-center gap-2 px-4 py-1.5 text-white rounded-lg text-sm font-medium transition-colors",
             canContinue
               ? "bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] cursor-pointer"
-              : "bg-[var(--color-text-light)] cursor-not-allowed opacity-60"
+              : "bg-[var(--color-text-light)] cursor-not-allowed opacity-50"
           )}
         >
           {!canContinue && (
-            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
           )}
           {continueLabel}
-          {canContinue && <ArrowRight size={16} />}
+          {canContinue && <ArrowRight size={14} />}
         </button>
       </div>
 
@@ -176,24 +176,28 @@ export function SummaryView({
           value={aggregate.avg_sentiment.toFixed(1)}
           subtext="out of 5"
           color={sentimentColor}
+          description="Average emotional response (1-5) across all personas. 1 = strongly negative, 3 = neutral, 5 = strongly positive."
         />
         <MetricCard
           label="Relevance"
           value={`${aggregate.relevance_pct}%`}
           subtext="weighted relevance"
           color={relevanceColor}
+          description="How relevant the message feels to each persona's life. Directly relevant = 100%, somewhat = 50%, irrelevant = 0%, then averaged."
         />
         <MetricCard
           label="Natural Tone"
           value={`${aggregate.tone_distribution.natural || 0}%`}
           subtext="of reactions"
           color="text-emerald-600"
+          description="Percentage of personas who felt the message sounded like it was written by someone who understands people like them."
         />
         <MetricCard
           label="Awkward / Offensive"
           value={`${(aggregate.tone_distribution.awkward || 0) + (aggregate.tone_distribution.offensive || 0)}%`}
           subtext="need attention"
           color="text-red-500"
+          description="Percentage of personas who found the tone forced, out of touch, or actively alienating. Lower is better."
         />
       </div>
 
@@ -202,9 +206,9 @@ export function SummaryView({
         <SentimentDistribution reactions={reactions} />
 
         {/* Tone distribution */}
-        <div className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm space-y-2">
-          <p className="text-xs text-[var(--color-text-muted)] font-medium uppercase tracking-wide mb-2">
-            Tone Fit Distribution
+        <div className="bg-[var(--color-bg-card)] rounded-lg border border-[var(--color-border)] p-3 space-y-1.5">
+          <p className="text-xs text-[var(--color-text-muted)] mb-1">
+            Tone Distribution
           </p>
           <ToneBar label="Natural" pct={aggregate.tone_distribution.natural || 0} color="bg-emerald-500" />
           <ToneBar label="Acceptable" pct={aggregate.tone_distribution.acceptable || 0} color="bg-blue-500" />
@@ -215,20 +219,14 @@ export function SummaryView({
 
       {/* Cultural flags */}
       {aggregate.top_cultural_flags.length > 0 && (
-        <div className="bg-orange-50 rounded-xl border border-orange-200 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle size={16} className="text-orange-600" />
-            <p className="text-sm font-medium text-orange-800">
-              Cultural Flags Raised
-            </p>
-          </div>
-          <ul className="space-y-1">
+        <div className="bg-[var(--color-surface)] rounded-lg p-3">
+          <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1.5">
+            <AlertTriangle size={12} />
+            Cultural Flags
+          </p>
+          <ul className="space-y-0.5">
             {aggregate.top_cultural_flags.map((flag) => (
-              <li
-                key={flag}
-                className="text-sm text-orange-700 flex items-start gap-1.5"
-              >
-                <span className="text-orange-400 mt-1">-</span>
+              <li key={flag} className="text-sm text-[var(--color-text)]">
                 {flag}
               </li>
             ))}
@@ -238,20 +236,10 @@ export function SummaryView({
 
       {/* Per-persona shift: Round 1 → Round 2 */}
       {round === 2 && round1Reactions && round1Reactions.length > 0 && (
-        <div className="space-y-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <Users size={16} className="text-[var(--color-text-muted)]" />
-              <h3 className="text-sm font-semibold text-[var(--color-text)] uppercase tracking-wide">
-                Reaction Comparison by Persona
-              </h3>
-            </div>
-            <p className="text-xs text-[var(--color-text-muted)] mt-1 ml-6">
-              Each persona reacted to both messages independently — they have no
-              memory of Round 1. Differences reflect how the optimized message
-              lands with the same demographic profile, not a change of opinion.
-            </p>
-          </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold text-[var(--color-text)]">
+            Per-Persona Comparison
+          </h3>
           {reactions.map((r2) => {
             const r1 = round1Reactions.find(
               (r) => r.persona.uuid === r2.persona.uuid
@@ -277,36 +265,26 @@ export function SummaryView({
             return (
               <div
                 key={r2.persona.uuid}
-                className="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm"
+                className="bg-[var(--color-bg-card)] rounded-lg border border-[var(--color-border)] p-3"
               >
-                {/* Persona header + sentiment delta */}
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-semibold text-[var(--color-text)]">
-                    {r2.persona.occupation}, {r2.persona.age} —{" "}
-                    {r2.persona.planning_area}, {r2.persona.province}
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-[var(--color-text)]">
+                    {r2.persona.age} {r2.persona.sex} &middot; {r2.persona.occupation}, {r2.persona.province}
                   </p>
-                  <div className={cn("flex items-center gap-1 text-xs font-mono font-medium", deltaColor)}>
-                    <DeltaIcon size={14} />
-                    <span>{deltaLabel}</span>
-                    <span className="text-[var(--color-text-muted)] ml-1">
-                      sentiment {r1.sentiment_score}/5 → {r2.sentiment_score}/5
-                    </span>
+                  <div className={cn("flex items-center gap-1 text-xs font-mono", deltaColor)}>
+                    <DeltaIcon size={12} />
+                    {deltaLabel}
                   </div>
                 </div>
-                {/* Side-by-side reactions */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="rounded-lg bg-[var(--color-surface)] p-3">
-                    <p className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
-                      Round 1 — Original Message
-                    </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="rounded-lg bg-[var(--color-surface)] p-2.5">
+                    <p className="text-[10px] text-[var(--color-text-light)] mb-0.5">Round 1</p>
                     <p className="text-sm italic text-[var(--color-text)]">
                       &ldquo;{r1.reaction}&rdquo;
                     </p>
                   </div>
-                  <div className="rounded-lg bg-[var(--color-surface)] p-3">
-                    <p className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
-                      Round 2 — Optimized Message
-                    </p>
+                  <div className="rounded-lg bg-[var(--color-surface)] p-2.5">
+                    <p className="text-[10px] text-[var(--color-text-light)] mb-0.5">Round 2</p>
                     <p className="text-sm italic text-[var(--color-text)]">
                       &ldquo;{r2.reaction}&rdquo;
                     </p>

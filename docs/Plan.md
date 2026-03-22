@@ -1,5 +1,9 @@
-# Final Goal
-https://github.com/AayushMathur7/ask-singapore/tree/main
+# Initial Research & Planning (Historical)
+
+> **Note**: This was the original research doc from Session 1 (2026-03-14) when the project was called "Ask Canada". The project has since evolved into **MaplePulse** with a FastAPI + LangGraph backend. See [MaplePulse-Plan.md](MaplePulse-Plan.md) for the current plan.
+
+**Reference project**: https://github.com/AayushMathur7/ask-singapore/tree/main
+
 ---
 
 # 1. Closest thing: Generate Canada personas from census data

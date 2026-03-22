@@ -5,9 +5,6 @@ import {
   ThumbsDown,
   Minus,
   AlertTriangle,
-  Cpu,
-  MapPin,
-  Briefcase,
 } from "lucide-react";
 import type { Reaction } from "@/lib/types";
 import { cn } from "@/lib/cn";
@@ -56,85 +53,62 @@ export function ReactionCard({
   isResponding,
   round1Reaction,
 }: ReactionCardProps) {
-  const { persona, reaction: text, sentiment_score, relevance, tone_fit, cultural_flags, model_used } = reaction;
+  const { persona, reaction: text, sentiment_score, relevance, tone_fit, cultural_flags } = reaction;
 
   return (
     <div
       className={cn(
-        "bg-[var(--color-bg-card)] rounded-xl border shadow-sm transition-all duration-300",
+        "bg-[var(--color-bg-card)] rounded-lg border transition-all duration-300",
         isActive
-          ? "border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20"
+          ? "border-[var(--color-primary)]"
           : "border-[var(--color-border)]",
         isResponding && "animate-pulse"
       )}
       style={{
-        animationDelay: `${index * 100}ms`,
+        animationDelay: `${index * 80}ms`,
         animationFillMode: "both",
       }}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center text-xs font-bold text-[var(--color-primary)]">
-            {persona.age}
-          </div>
-          <div>
-            <p className="text-sm font-medium">
-              {persona.sex}, {persona.occupation}
-            </p>
-            <div className="flex items-center gap-2 text-[10px] text-[var(--color-text-muted)]">
-              <span className="flex items-center gap-0.5">
-                <MapPin size={10} />
-                {persona.planning_area}, {persona.province}
-              </span>
-              <span className="flex items-center gap-0.5">
-                <Briefcase size={10} />
-                {persona.income_bracket}
-              </span>
-            </div>
-          </div>
+      <div className="px-3 py-2 border-b border-[var(--color-border)] flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium">
+            {persona.age} {persona.sex} &middot; {persona.occupation}
+          </p>
+          <p className="text-[11px] text-[var(--color-text-muted)]">
+            {persona.planning_area}, {persona.province}
+          </p>
         </div>
         <div className="flex items-center gap-1.5">
           <SentimentBadge score={sentiment_score} />
           {relevance === "directly_relevant" ? (
-            <ThumbsUp size={14} className="text-emerald-600" />
+            <ThumbsUp size={12} className="text-emerald-600" />
           ) : relevance === "somewhat" ? (
-            <Minus size={14} className="text-amber-500" />
+            <Minus size={12} className="text-amber-500" />
           ) : (
-            <ThumbsDown size={14} className="text-red-400" />
+            <ThumbsDown size={12} className="text-red-400" />
           )}
         </div>
       </div>
 
       {/* Round 1 reaction (shown in Round 2 for comparison) */}
       {round1Reaction && !isResponding && (
-        <div className="px-4 pt-3 pb-1">
-          <p className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
-            Round 1 — Original Message
-          </p>
-          <p className="text-xs leading-relaxed italic text-[var(--color-text-muted)]">
+        <div className="px-3 pt-2 pb-1">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <p className="text-[10px] text-[var(--color-text-light)]">Round 1</p>
+            <SentimentBadge score={round1Reaction.sentiment_score} />
+          </div>
+          <p className="text-xs italic text-[var(--color-text-muted)]">
             &ldquo;{round1Reaction.reaction}&rdquo;
           </p>
-          <div className="flex items-center gap-1.5 mt-1">
-            <SentimentBadge score={round1Reaction.sentiment_score} />
-            {round1Reaction.relevance === "directly_relevant" ? (
-              <ThumbsUp size={11} className="text-emerald-600" />
-            ) : round1Reaction.relevance === "somewhat" ? (
-              <Minus size={11} className="text-amber-500" />
-            ) : (
-              <ThumbsDown size={11} className="text-red-400" />
-            )}
-          </div>
-          <div className="mt-2 border-t border-dashed border-[var(--color-border)]" />
+          <div className="mt-1.5 border-t border-dashed border-[var(--color-border)]" />
         </div>
       )}
 
       {/* Reaction body */}
-      <div className="px-4 py-3">
+      <div className="px-3 py-2">
         {round1Reaction && !isResponding && (
-          <p className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
-            Round 2 — Optimized Message
-          </p>
+          <p className="text-[10px] text-[var(--color-text-light)] mb-0.5">Round 2</p>
         )}
         {isResponding ? (
           <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
@@ -153,26 +127,18 @@ export function ReactionCard({
       </div>
 
       {/* Footer */}
-      {!isResponding && (
-        <div className="px-4 py-2 border-t border-[var(--color-border)] flex items-center justify-between">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <ToneBadge tone={tone_fit} />
-            {cultural_flags.map((flag) => (
-              <span
-                key={flag}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 flex items-center gap-0.5"
-              >
-                <AlertTriangle size={9} />
-                {flag}
-              </span>
-            ))}
-          </div>
-          {model_used && (
-            <span className="text-[10px] text-[var(--color-text-light)] flex items-center gap-0.5">
-              <Cpu size={9} />
-              {model_used}
+      {!isResponding && (cultural_flags.length > 0 || tone_fit) && (
+        <div className="px-3 py-1.5 border-t border-[var(--color-border)] flex items-center gap-1.5 flex-wrap">
+          <ToneBadge tone={tone_fit} />
+          {cultural_flags.map((flag) => (
+            <span
+              key={flag}
+              className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-surface)] text-[var(--color-text-muted)] flex items-center gap-0.5"
+            >
+              <AlertTriangle size={9} />
+              {flag}
             </span>
-          )}
+          ))}
         </div>
       )}
     </div>
