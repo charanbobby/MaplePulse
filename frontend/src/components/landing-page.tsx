@@ -11,18 +11,13 @@ interface VideoCard {
 
 const VIDEOS: VideoCard[] = [
   {
-    title: "Marketing Showcase",
-    description: "15 real-world scenarios in 10 minutes.",
-    youtubeId: "PLACEHOLDER_MARKETING",
+    title: "What It Does",
+    description: "Real scenarios, real reactions, 6 minutes.",
+    youtubeId: "mj6Ts8MwIII",
   },
   {
-    title: "Business Overview",
-    description: "What it does and who it's for.",
-    youtubeId: "PLACEHOLDER_BUSINESS",
-  },
-  {
-    title: "Technical Deep-Dive",
-    description: "How the panel engine works under the hood.",
+    title: "How It Works",
+    description: "The tech behind the panel engine.",
     youtubeId: "PLACEHOLDER_TECHNICAL",
   },
 ];
@@ -118,7 +113,7 @@ export function LandingPage({ onEnterApp }: LandingPageProps) {
       {/* Videos */}
       <section className="max-w-4xl mx-auto px-4 pb-20">
         <h2 className="text-lg font-semibold text-center mb-6">See it in action</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
           {VIDEOS.map(({ title, description, youtubeId }) => (
             <div
               key={title}

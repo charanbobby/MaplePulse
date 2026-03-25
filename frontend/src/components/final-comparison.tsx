@@ -16,6 +16,7 @@ import {
 import type { AggregatedResults, OptimizedMessage } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { submitFeedback } from "@/lib/api";
+import { EvalVote } from "./eval-vote";
 
 // ── Word-level diff engine ──────────────────────────────────────────
 
@@ -566,6 +567,22 @@ export function FinalComparison({
         );
       })()}
 
+
+      {/* Eval voting */}
+      <div className="flex items-center gap-6 pt-1 border-t border-[var(--color-border)]">
+        <EvalVote
+          evalType="brand_voice"
+          label="Brand voice preserved?"
+          traceId={traceId || undefined}
+          meta={{ original_message: originalMessage, optimized_message: optimized.improved_message }}
+        />
+        <EvalVote
+          evalType="optimization_faithfulness"
+          label="No hallucinated claims?"
+          traceId={traceId || undefined}
+          meta={{ original_message: originalMessage, optimized_message: optimized.improved_message, changes_made: optimized.changes_made }}
+        />
+      </div>
 
       {/* Feedback */}
       {traceId && (

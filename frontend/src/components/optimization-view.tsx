@@ -2,7 +2,6 @@
 
 import { Sparkles, ArrowRight, Check } from "lucide-react";
 import type { OptimizedMessage } from "@/lib/types";
-
 interface OptimizationViewProps {
   originalMessage: string;
   optimized: OptimizedMessage;
@@ -78,6 +77,7 @@ export function OptimizationView({
           ))}
         </div>
       </div>
+
     </div>
   );
 }

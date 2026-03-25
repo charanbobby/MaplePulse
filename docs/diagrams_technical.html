@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MaplePulse — Technical Diagrams</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    padding: 40px 24px 40px 24px;
+    line-height: 1.5;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.8em;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.9em;
+    margin-bottom: 24px;
+  }
+
+  /* --- Sticky TOC --- */
+  .toc {
+    max-width: 920px;
+    margin: 0 auto 40px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .toc-title { font-weight: 700; font-size: 0.85em; color: #64748b; margin-bottom: 8px; }
+  .toc-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .toc-grid a {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78em;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  .toc-grid a:hover { filter: brightness(0.92); }
+  .toc-s3  { background: #dbeafe; color: #1e40af; }
+  .toc-s4  { background: #f3e8ff; color: #7c3aed; }
+  .toc-s6  { background: #e0e7ff; color: #4338ca; }
+  .toc-s7  { background: #fef2f2; color: #dc2626; }
+  .toc-s8  { background: #fff7ed; color: #ea580c; }
+  .toc-s9  { background: #ecfdf5; color: #059669; }
+  .toc-s10 { background: #ede9fe; color: #6d28d9; }
+  .toc-s11 { background: #fef2f2; color: #b91c1c; }
+  .toc-s12 { background: #fefce8; color: #a16207; }
+  .toc-sum { background: #f1f5f9; color: #334155; }
+
+  /* --- Diagram cards --- */
+  .diagram {
+    max-width: 920px;
+    margin: 0 auto 64px;
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+    page-break-inside: avoid;
+    scroll-margin-top: 80px;
+  }
+  .diagram-title {
+    font-size: 1.25em;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .diagram-ref {
+    text-align: center;
+    font-size: 0.8em;
+    color: #94a3b8;
+    margin-bottom: 24px;
+  }
+
+  /* --- Shared layout helpers --- */
+  .flow-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .flow-arrow { font-size: 1.5em; line-height: 1; }
+  .box {
+    border-radius: 8px;
+    padding: 12px 24px;
+    text-align: center;
+    font-weight: 600;
+    width: 280px;
+  }
+  .box-sm { font-size: 0.8em; color: #6b7280; font-weight: 400; }
+  .flex-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .phase-card {
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    width: 180px;
+  }
+  .phase-badge {
+    color: white;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.72em;
+    font-weight: 700;
+    position: absolute;
+    top: -10px;
+    left: 12px;
+  }
+  .phase-card h5 { margin: 8px 0 6px; }
+  .phase-card ul {
+    font-size: 0.8em;
+    padding-left: 16px;
+    margin: 0;
+    color: #4b5563;
+  }
+  .phase-date { font-size: 0.7em; color: #9ca3af; margin-top: 8px; }
+  .side-stream {
+    border: 2px dashed;
+    border-radius: 8px;
+    padding: 10px 16px;
+    width: 250px;
+    text-align: center;
+  }
+  .side-stream span { font-size: 0.8em; color: #6b7280; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+  td { padding: 6px; }
+  .col-card {
+    flex: 1;
+    min-width: 250px;
+    max-width: 300px;
+  }
+  .col-inner {
+    border-radius: 12px;
+    padding: 16px;
+    border-width: 2px;
+    border-style: solid;
+  }
+  .col-inner h5 { margin: 0 0 10px; text-align: center; }
+  .col-row {
+    font-size: 0.8em;
+    color: #4b5563;
+    padding: 4px 0;
+  }
+  .col-footer { margin-top: 8px; font-size: 0.75em; color: #9ca3af; text-align: center; }
+  .role-list {
+    font-size: 0.85em;
+    padding-left: 18px;
+    margin: 0;
+    color: #1f2937;
+    line-height: 1.7;
+  }
+  .callout {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.85em;
+    text-align: center;
+  }
+  .workflow-phase {
+    border-radius: 10px;
+    padding: 14px;
+    width: 220px;
+    border-width: 2px;
+    border-style: solid;
+  }
+  .workflow-phase .title { font-weight: 700; font-size: 0.9em; }
+  .workflow-phase .body { font-size: 0.8em; color: #4b5563; margin-top: 6px; }
+  .workflow-phase .endpoint {
+    margin-top: 8px;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.75em;
+    text-align: center;
+  }
+  .arrow-between { display: flex; align-items: center; font-size: 1.5em; color: #6b7280; }
+
+  /* --- Pipeline node --- */
+  .pipe-node {
+    background: white;
+    border: 2px solid;
+    border-radius: 8px;
+    padding: 10px 18px;
+    text-align: center;
+    font-size: 0.85em;
+    min-width: 130px;
+  }
+  .pipe-node strong { display: block; margin-bottom: 2px; }
+  .pipe-node .sub { font-size: 0.8em; color: #6b7280; }
+
+  @media print {
+    body { padding: 20px; }
+    .diagram { box-shadow: none; border: 1px solid #e2e8f0; margin-bottom: 32px; }
+    .toc { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<h1>MaplePulse &mdash; Technical Diagrams</h1>
+<p class="subtitle">Companion visuals for script_technical.md &mdash; click a diagram name to jump to it</p>
+
+<!-- ============================================================ -->
+<!-- STICKY TOC -->
+<!-- ============================================================ -->
+<nav class="toc">
+<div class="toc-title">DIAGRAMS (click to jump)</div>
+<div class="toc-grid">
+  <a href="#persona-enrichment" class="toc-s3">S3: Persona Enrichment Pipeline</a>
+  <a href="#langgraph-pipeline" class="toc-s4">S4: LangGraph Pipeline Flow</a>
+  <a href="#project-evolution" class="toc-s6">S6: Project Evolution</a>
+  <a href="#anti-sycophancy" class="toc-s7">S7: Anti-Sycophancy Rubric</a>
+  <a href="#agentic-panel" class="toc-s8">S8: Agentic Panel Building</a>
+  <a href="#observability" class="toc-s9">S9: Observability Stack</a>
+  <a href="#split-workflow" class="toc-s10">S10: 3-Phase Split Workflow</a>
+  <a href="#eval-framework" class="toc-s11">S11: Evaluation Framework</a>
+  <a href="#system-architecture" class="toc-s12">S12: System Architecture</a>
+  <a href="#role-division" class="toc-sum">Summary: My Role vs. Claude Code</a>
+</div>
+</nav>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM S3: Persona Enrichment Pipeline -->
+<!-- ============================================================ -->
+<div class="diagram" id="persona-enrichment">
+<div class="diagram-title" style="color: #1e40af;">Persona Enrichment Pipeline</div>
+<div class="diagram-ref">Script Section 3 &mdash; The Enrichment Problem</div>
+
+<div class="flow-col">
+
+<div class="box" style="background: #dbeafe; border: 2px solid #3b82f6;">
+  Census 2021 Probability Weights<br><span class="box-sm">13 demographic categories</span>
+</div>
+<div class="flow-arrow" style="color: #3b82f6;">&#8595;</div>
+
+<div class="box" style="background: #dbeafe; border: 2px solid #3b82f6;">
+  Stratified Skeleton Generator<br><span class="box-sm">22 deterministic fields</span>
+</div>
+<div class="flow-arrow" style="color: #3b82f6;">&#8595;</div>
+
+<div class="flex-row">
+  <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 12px 16px; width: 200px; text-align: center;">
+    <strong>Job Bank 2025</strong><br><span style="font-size: 0.8em;">516 NOC codes<br>Provincial wages<br>&times; CPI 1.23 inflation</span>
+  </div>
+  <div class="flow-arrow" style="color: #f59e0b;">&#8594;</div>
+  <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 12px 16px; width: 200px; text-align: center;">
+    <strong>Income Assignment</strong><br><span style="font-size: 0.8em;">Age-adjusted quartiles<br>NOC &rarr; wage lookup<br>Non-employed estimates</span>
+  </div>
+</div>
+<div class="flow-arrow" style="color: #3b82f6;">&#8595;</div>
+
+<div class="box" style="background: #dcfce7; border: 2px solid #22c55e;">
+  LLM Enrichment (Anthropic)<br><span class="box-sm">personality, hobbies, career goals<br>grounded in demographic base</span>
+</div>
+<div class="flow-arrow" style="color: #22c55e;">&#8595;</div>
+
+<div class="box" style="background: #f0fdf4; border: 2px solid #16a34a; font-weight: 700;">
+  Complete Persona (25 fields)<br><span class="box-sm">21 deterministic + 4 LLM-enriched</span>
+</div>
+
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM S4: LangGraph Pipeline Flow -->
+<!-- ============================================================ -->
+<div class="diagram" id="langgraph-pipeline">
+<div class="diagram-title" style="color: #7c3aed;">LangGraph Pipeline Flow</div>
+<div class="diagram-ref">Script Section 4 &mdash; The Jupyter Prototype</div>
+
+<div class="flow-col">
+
+<div class="pipe-node" style="border-color: #8b5cf6; background: #f5f3ff;">
+  <strong>classify_intent</strong>
+  <div class="sub">localization | product_concept | ab_copy_test | survey_pretest</div>
+</div>
+<div class="flow-arrow" style="color: #8b5cf6;">&#8595;</div>
+
+<div class="pipe-node" style="border-color: #6366f1; background: #eef2ff;">
+  <strong>select_panel</strong>
+  <div class="sub">Filter 5K personas by demographics &rarr; 12 panelists</div>
+</div>
+<div class="flow-arrow" style="color: #6366f1;">&#8595;</div>
+
+<div class="pipe-node" style="border-color: #3b82f6; background: #eff6ff;">
+  <strong>run_reactions (R1)</strong>
+  <div class="sub">12 parallel LLM calls &mdash; 1 per persona, model rotated across pool of 5</div>
+</div>
+<div class="flow-arrow" style="color: #3b82f6;">&#8595;</div>
+
+<div class="pipe-node" style="border-color: #0891b2; background: #ecfeff;">
+  <strong>aggregate</strong>
+  <div class="sub">Sentiment distribution, relevance breakdown, tone fit, cultural flags</div>
+</div>
+<div class="flow-arrow" style="color: #0891b2;">&#8595;</div>
+
+<div class="pipe-node" style="border-color: #f59e0b; background: #fffbeb;">
+  <strong>optimize_message</strong>
+  <div class="sub">LLM rewriter: pattern-based changes, preserve vivid language</div>
+</div>
+<div class="flow-arrow" style="color: #f59e0b;">&#8595;</div>
+
+<div class="pipe-node" style="border-color: #3b82f6; background: #eff6ff;">
+  <strong>run_reactions (R2)</strong>
+  <div class="sub">Same 12 panelists re-evaluate optimized message</div>
+</div>
+<div class="flow-arrow" style="color: #3b82f6;">&#8595;</div>
+
+<div class="pipe-node" style="border-color: #0891b2; background: #ecfeff;">
+  <strong>aggregate_v2</strong>
+  <div class="sub">Before/after comparison &mdash; sentiment delta, relevance delta</div>
+</div>
+
+</div>
+
+<div class="callout" style="background: #faf5ff; border: 1px solid #c084fc; color: #4b5563; margin-top: 20px;">
+  <strong>Per-run totals:</strong> 12 (R1) + 1 (optimizer) + 12 (R2) = <strong>25 LLM calls</strong> for the core pipeline.<br>
+  Add ~3-5 if using the agentic panel builder instead of static filter.
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM S6: Project Evolution -->
+<!-- ============================================================ -->
+<div class="diagram" id="project-evolution">
+<div class="diagram-title" style="color: #1e40af;">Project Evolution: Notebook &rarr; Full-Stack Application</div>
+<div class="diagram-ref">Script Section 6 &mdash; Fanning Out</div>
+
+<div class="flex-row" style="margin-bottom: 20px;">
+
+<!-- Phase 1 -->
+<div class="phase-card" style="background: #f3e8ff; border: 2px solid #a855f7;">
+  <div class="phase-badge" style="background: #a855f7;">PHASE 1</div>
+  <h5 style="color: #7c3aed;">Jupyter Notebook</h5>
+  <ul>
+    <li>LangGraph pipeline</li>
+    <li>5K persona JSON</li>
+    <li>Single model</li>
+    <li>Manual execution</li>
+    <li>Langfuse traces</li>
+  </ul>
+  <div class="phase-date">Session 1-3 (Mar 14-15)</div>
+</div>
+
+<div class="arrow-between">&rarr;</div>
+
+<!-- Phase 2 -->
+<div class="phase-card" style="background: #dbeafe; border: 2px solid #3b82f6;">
+  <div class="phase-badge" style="background: #3b82f6;">PHASE 2</div>
+  <h5 style="color: #2563eb;">Full-Stack v2</h5>
+  <ul>
+    <li>FastAPI backend</li>
+    <li>Next.js 15 frontend</li>
+    <li>8-step workflow UI</li>
+    <li>Multi-model rotation</li>
+    <li>SSE streaming</li>
+    <li>Docker Compose (3 svc)</li>
+  </ul>
+  <div class="phase-date">Session 5-6 (Mar 19)</div>
+</div>
+
+<div class="arrow-between">&rarr;</div>
+
+<!-- Phase 3 -->
+<div class="phase-card" style="background: #fef3c7; border: 2px solid #f59e0b;">
+  <div class="phase-badge" style="background: #f59e0b;">PHASE 3</div>
+  <h5 style="color: #d97706;">Calibration</h5>
+  <ul>
+    <li>Anchored scoring (1-5)</li>
+    <li>Relevance enum</li>
+    <li>Neutral tone labels</li>
+    <li>Scoring calibration prompt</li>
+    <li>90% positive &rarr; real dist.</li>
+  </ul>
+  <div class="phase-date">Session 7 (Mar 20)</div>
+</div>
+
+<div class="arrow-between">&rarr;</div>
+
+<!-- Phase 4 -->
+<div class="phase-card" style="background: #dcfce7; border: 2px solid #22c55e;">
+  <div class="phase-badge" style="background: #22c55e;">PHASE 4</div>
+  <h5 style="color: #16a34a;">Agentic + Production</h5>
+  <ul>
+    <li>ReAct persona agent</li>
+    <li>SQLite + FTS5</li>
+    <li>3-phase split workflow</li>
+    <li>Human review checkpoint</li>
+    <li>Quality filtering</li>
+    <li>Hetzner + Nginx + SSL</li>
+  </ul>
+  <div class="phase-date">Session 8-9 (Mar 21-22)</div>
+</div>
+
+</div>
+
+<!-- Side workstreams -->
+<div class="flex-row">
+  <div class="side-stream" style="background: #fce7f3; border-color: #ec4899;">
+    <strong style="color: #db2777;">&#10178; Parallel: OpenAI Playground</strong><br>
+    <span>Meta prompting for reaction prompts,<br>scoring rubrics, optimizer prompts</span>
+  </div>
+  <div class="side-stream" style="background: #e0e7ff; border-color: #6366f1;">
+    <strong style="color: #4f46e5;">&#10178; Parallel: Langflow</strong><br>
+    <span>Visual trace inspection,<br>understanding LLM call chains</span>
+  </div>
+  <div class="side-stream" style="background: #fff7ed; border-color: #f97316;">
+    <strong style="color: #ea580c;">&#10178; Parallel: Data Research</strong><br>
+    <span>30+ Canadian data sources,<br>Job Bank wages, CES, Angus Reid</span>
+  </div>
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM S7: Anti-Sycophancy Rubric Redesign -->
+<!-- ============================================================ -->
+<div class="diagram" id="anti-sycophancy">
+<div class="diagram-title" style="color: #dc2626;">Anti-Sycophancy Rubric Redesign</div>
+<div class="diagram-ref">Script Section 7 &mdash; The Sycophancy Problem</div>
+
+<div class="flex-row" style="gap: 24px;">
+
+<!-- Before -->
+<div style="flex: 1; min-width: 300px; max-width: 400px;">
+<div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 16px;">
+<h5 style="color: #dc2626; margin: 0 0 12px; text-align: center;">&#10060; BEFORE (v1)</h5>
+<table>
+<tr style="border-bottom: 1px solid #fecaca;">
+  <td style="font-weight: 600;">Sentiment</td>
+  <td>1-10 (no anchors)</td>
+</tr>
+<tr style="border-bottom: 1px solid #fecaca;">
+  <td style="font-weight: 600;">Resonance</td>
+  <td>boolean (true/false)</td>
+</tr>
+<tr style="border-bottom: 1px solid #fecaca;">
+  <td style="font-weight: 600;">Tone fit</td>
+  <td>perfect / acceptable / off / offensive</td>
+</tr>
+<tr>
+  <td style="font-weight: 600;">Calibration</td>
+  <td>None</td>
+</tr>
+</table>
+<div style="margin-top: 10px; padding: 8px; background: #fee2e2; border-radius: 6px; font-size: 0.8em; text-align: center;">
+<strong>Result:</strong> 90% positive, sentiment 6.5-7.2/10<br>regardless of message quality
+</div>
+</div>
+</div>
+
+<!-- After -->
+<div style="flex: 1; min-width: 300px; max-width: 400px;">
+<div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 12px; padding: 16px;">
+<h5 style="color: #16a34a; margin: 0 0 12px; text-align: center;">&#10003; AFTER (v2)</h5>
+<table>
+<tr style="border-bottom: 1px solid #bbf7d0;">
+  <td style="font-weight: 600;">Sentiment</td>
+  <td>1-5 with anchored descriptions<br><span style="font-size: 0.85em; color: #6b7280;">1=hostile, 2=skeptical, 3=neutral, 4=interested, 5=enthusiastic</span></td>
+</tr>
+<tr style="border-bottom: 1px solid #bbf7d0;">
+  <td style="font-weight: 600;">Relevance</td>
+  <td>irrelevant / somewhat / directly_relevant</td>
+</tr>
+<tr style="border-bottom: 1px solid #bbf7d0;">
+  <td style="font-weight: 600;">Tone fit</td>
+  <td>natural / acceptable / awkward / offensive</td>
+</tr>
+<tr>
+  <td style="font-weight: 600;">Calibration</td>
+  <td>Explicit anti-sycophancy prompt section</td>
+</tr>
+</table>
+<div style="margin-top: 10px; padding: 8px; background: #dcfce7; border-radius: 6px; font-size: 0.8em; text-align: center;">
+<strong>Result:</strong> Realistic distribution,<br>mediocre messages get mediocre scores
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM S8: Agentic Panel Building -->
+<!-- ============================================================ -->
+<div class="diagram" id="agentic-panel">
+<div class="diagram-title" style="color: #1e40af;">Agentic Panel Building (v3 Architecture)</div>
+<div class="diagram-ref">Script Section 8 &mdash; The Agentic Engine</div>
+
+<div class="flow-col">
+
+<!-- Input -->
+<div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 10px; padding: 14px 28px; text-align: center; font-weight: 600; width: 340px;">
+  User: "Costco shoppers in suburban Ontario"
+</div>
+<div class="flow-arrow" style="color: #6366f1;">&#8595;</div>
+
+<!-- Phase 1 -->
+<div style="background: #f5f3ff; border: 2px solid #8b5cf6; border-radius: 10px; padding: 14px 20px; width: 420px;">
+  <div style="font-weight: 700; color: #7c3aed; margin-bottom: 6px;">Phase 1: Parse Audience Brief</div>
+  <div style="font-size: 0.85em; color: #4b5563;">LLM extracts: demographics, psychographics, behaviors, constraints &rarr; structured spec</div>
+</div>
+<div class="flow-arrow" style="color: #8b5cf6;">&#8595;</div>
+
+<!-- Phase 2 -->
+<div style="background: #fdf4ff; border: 2px solid #c026d3; border-radius: 10px; padding: 14px 20px; width: 420px;">
+  <div style="font-weight: 700; color: #a21caf; margin-bottom: 6px;">Phase 2: Context Projection</div>
+  <div style="font-size: 0.85em; color: #4b5563;">LLM decides which persona fields matter for THIS query.<br>Health question &rarr; health fields. Financial product &rarr; income + spending.</div>
+</div>
+<div class="flow-arrow" style="color: #c026d3;">&#8595;</div>
+
+<!-- Phase 3: Agent -->
+<div style="background: #fff7ed; border: 2px solid #ea580c; border-radius: 10px; padding: 16px 20px; width: 520px;">
+  <div style="font-weight: 700; color: #ea580c; margin-bottom: 12px;">Phase 3: ReAct Agent (Loop)</div>
+
+  <div class="flex-row" style="gap: 10px;">
+    <div style="background: white; border: 1px solid #fdba74; border-radius: 6px; padding: 8px 12px; font-size: 0.8em; text-align: center; width: 140px;">
+      <strong>&#128269; search_personas</strong><br>Query SQLite DB<br>with FTS5
+    </div>
+    <div style="background: white; border: 1px solid #fdba74; border-radius: 6px; padding: 8px 12px; font-size: 0.8em; text-align: center; width: 140px;">
+      <strong>&#129516; generate_personas</strong><br>Create on-the-fly<br>from census data
+    </div>
+    <div style="background: white; border: 1px solid #fdba74; border-radius: 6px; padding: 8px 12px; font-size: 0.8em; text-align: center; width: 140px;">
+      <strong>&#127760; fetch_data</strong><br>Pull Canadian<br>domain data
+    </div>
+  </div>
+
+  <div style="font-size: 0.8em; color: #9a3412; margin-top: 10px; text-align: center;">
+    Agent reasons about gaps &rarr; calls tools &rarr; evaluates results &rarr; repeats until panel is complete (12-20 personas)
+  </div>
+</div>
+<div class="flow-arrow" style="color: #ea580c;">&#8595;</div>
+
+<!-- Output -->
+<div style="background: #dcfce7; border: 2px solid #16a34a; border-radius: 10px; padding: 14px 20px; width: 420px;">
+  <div style="font-weight: 700; color: #16a34a; margin-bottom: 6px;">Assembled Panel (12-20 personas)</div>
+  <div style="font-size: 0.85em; color: #4b5563;">Mix of seed personas (from 5K pool) + newly generated ones<br>Each tagged with source, audience_tags, domain_context</div>
+</div>
+
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM S9: Observability Stack -->
+<!-- ============================================================ -->
+<div class="diagram" id="observability">
+<div class="diagram-title" style="color: #059669;">Observability Stack</div>
+<div class="diagram-ref">Script Section 9 &mdash; Observability &mdash; Langfuse + Langflow</div>
+
+<div class="flex-row" style="gap: 24px; align-items: stretch;">
+
+<!-- Langfuse -->
+<div style="flex: 1; min-width: 280px; max-width: 400px;">
+<div style="background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 16px; height: 100%;">
+<h5 style="color: #059669; margin: 0 0 12px; text-align: center;">Langfuse &mdash; Production Tracing</h5>
+<table>
+<tr style="border-bottom: 1px solid #a7f3d0;">
+  <td style="font-weight: 600;">What</td>
+  <td>Every LLM call: model, tokens, cost, latency</td>
+</tr>
+<tr style="border-bottom: 1px solid #a7f3d0;">
+  <td style="font-weight: 600;">Cost</td>
+  <td>Custom OpenRouterLangfuseHandler &mdash; extracts per-call cost from OpenRouter metadata</td>
+</tr>
+<tr style="border-bottom: 1px solid #a7f3d0;">
+  <td style="font-weight: 600;">Grouping</td>
+  <td>Session ID per focus-group run &mdash; all calls nested under one trace</td>
+</tr>
+<tr>
+  <td style="font-weight: 600;">Spans</td>
+  <td>parse_audience_brief, context_projection, panel_builder_agent, round_1_reactions, optimizer, round_2_reactions</td>
+</tr>
+</table>
+<div style="margin-top: 10px; padding: 8px; background: #d1fae5; border-radius: 6px; font-size: 0.8em; text-align: center;">
+<strong>Role:</strong> Production monitoring &mdash; what costs money, what's slow
+</div>
+</div>
+</div>
+
+<!-- Langflow -->
+<div style="flex: 1; min-width: 280px; max-width: 400px;">
+<div style="background: #eef2ff; border: 2px solid #6366f1; border-radius: 12px; padding: 16px; height: 100%;">
+<h5 style="color: #4f46e5; margin: 0 0 12px; text-align: center;">Langflow &mdash; Visual Trace Inspection</h5>
+<table>
+<tr style="border-bottom: 1px solid #c7d2fe;">
+  <td style="font-weight: 600;">What</td>
+  <td>Visual graph of LLM call chains &mdash; topology, not just logs</td>
+</tr>
+<tr style="border-bottom: 1px solid #c7d2fe;">
+  <td style="font-weight: 600;">Bottlenecks</td>
+  <td>Which phase is slowest? Parallel vs. sequential?</td>
+</tr>
+<tr style="border-bottom: 1px solid #c7d2fe;">
+  <td style="font-weight: 600;">Agent health</td>
+  <td>Is agent making too many tool calls? (6-7 searches &rarr; tightened to 2-3)</td>
+</tr>
+<tr>
+  <td style="font-weight: 600;">Cost map</td>
+  <td>Cost distribution across pipeline phases</td>
+</tr>
+</table>
+<div style="margin-top: 10px; padding: 8px; background: #e0e7ff; border-radius: 6px; font-size: 0.8em; text-align: center;">
+<strong>Role:</strong> Development-time debugging &mdash; understand the shape of the pipeline
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="callout" style="background: #f0fdf4; border: 1px solid #86efac; color: #166534; margin-top: 16px;">
+  <strong>Both feed the same insight loop:</strong> Langfuse tells you <em>what</em> happened (cost, latency, errors). Langflow tells you <em>why</em> (topology, call patterns, sequential bottlenecks).
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM S10: 3-Phase Split Workflow -->
+<!-- ============================================================ -->
+<div class="diagram" id="split-workflow">
+<div class="diagram-title" style="color: #1e40af;">3-Phase Split Workflow (Human-in-the-Loop)</div>
+<div class="diagram-ref">Script Section 10 &mdash; Production Deployment</div>
+
+<div class="flex-row" style="gap: 8px; margin-bottom: 16px;">
+
+<!-- Phase 1 -->
+<div class="workflow-phase" style="background: #ede9fe; border-color: #8b5cf6;">
+  <div class="title" style="color: #7c3aed;">PHASE 1: Build Panel</div>
+  <div class="body">
+    User provides audience brief<br>
+    &rarr; Agent builds panel<br>
+    &rarr; User sees 12-20 personas<br>
+    &rarr; <strong>User reviews panel</strong>
+  </div>
+  <div class="endpoint" style="background: #c4b5fd; color: #5b21b6;">/api/build-panel or /api/select-panel</div>
+</div>
+
+<div class="arrow-between">&rarr;</div>
+
+<!-- Phase 2 -->
+<div class="workflow-phase" style="background: #dbeafe; border-color: #3b82f6;">
+  <div class="title" style="color: #2563eb;">PHASE 2: Run Reactions</div>
+  <div class="body">
+    Panel reacts to message<br>
+    &rarr; Model rotation (5 models, round-robin)<br>
+    &rarr; Quality filtering<br>
+    &rarr; <strong style="color: #dc2626;">User reviews reactions</strong><br>
+    &rarr; <strong style="color: #dc2626;">User excludes bad ones</strong>
+  </div>
+  <div class="endpoint" style="background: #93c5fd; color: #1e40af;">/api/run-with-panel</div>
+</div>
+
+<div class="arrow-between">&rarr;</div>
+
+<!-- Phase 3 -->
+<div class="workflow-phase" style="background: #dcfce7; border-color: #22c55e;">
+  <div class="title" style="color: #16a34a;">PHASE 3: Optimize & Compare</div>
+  <div class="body">
+    LLM rewrites message<br>
+    &rarr; Same panel re-evaluates<br>
+    &rarr; Before/after comparison<br>
+    &rarr; <strong>Sentiment delta, relevance delta</strong>
+  </div>
+  <div class="endpoint" style="background: #86efac; color: #166534;">/api/continue-after-review</div>
+</div>
+
+</div>
+
+<div class="callout" style="background: #fef3c7; border: 1px solid #fbbf24; color: #92400e;">
+  <strong>Human checkpoints (red text above)</strong> &mdash; users review the panel before reactions run, and review reactions before optimization runs. The system doesn't hide decisions from the user.
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM S11: Evaluation Framework -->
+<!-- ============================================================ -->
+<div class="diagram" id="eval-framework">
+<div class="diagram-title" style="color: #b91c1c;">Evaluation Framework (10 Evals)</div>
+<div class="diagram-ref">Script Section 11 &mdash; Measuring Quality Before Handoff</div>
+
+<!-- Two-column layout: Automated vs Human -->
+<div class="flex-row" style="gap: 24px; align-items: stretch; margin-bottom: 20px;">
+
+<!-- Automated Evals -->
+<div style="flex: 1; min-width: 280px; max-width: 420px;">
+<div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 12px; padding: 16px; height: 100%;">
+<h5 style="color: #16a34a; margin: 0 0 12px; text-align: center;">&#9889; Automated (fire every run)</h5>
+<table>
+<tr style="border-bottom: 1px solid #bbf7d0;">
+  <td style="font-weight: 600; width: 30px; color: #6b7280;">02</td>
+  <td><strong>Length Drift</strong><br><span style="font-size: 0.8em; color: #6b7280;">Tiered: &le;2x (&lt;30w), &le;1.5x (30-75w), &le;1.3x (75w+)</span></td>
+</tr>
+<tr style="border-bottom: 1px solid #bbf7d0;">
+  <td style="font-weight: 600; color: #6b7280;">08</td>
+  <td><strong>Metrics Improvement</strong><br><span style="font-size: 0.8em; color: #6b7280;">R2 beats R1 in &ge;2 of 3 metrics</span></td>
+</tr>
+<tr style="border-bottom: 1px solid #bbf7d0;">
+  <td style="font-weight: 600; color: #6b7280;">09</td>
+  <td><strong>A/B Position Bias</strong><br><span style="font-size: 0.8em; color: #6b7280;">Preference flip rate &lt; 20%</span></td>
+</tr>
+<tr>
+  <td style="font-weight: 600; color: #6b7280;">10</td>
+  <td><strong>Context Projection</strong><br><span style="font-size: 0.8em; color: #6b7280;">Golden set: &gt;80% recall, &gt;70% precision</span></td>
+</tr>
+</table>
+<div style="margin-top: 10px; padding: 8px; background: #dcfce7; border-radius: 6px; font-size: 0.8em; text-align: center;">
+No human effort &mdash; data accumulates silently
+</div>
+</div>
+</div>
+
+<!-- Human Evals -->
+<div style="flex: 1; min-width: 280px; max-width: 420px;">
+<div style="background: #eff6ff; border: 2px solid #3b82f6; border-radius: 12px; padding: 16px; height: 100%;">
+<h5 style="color: #1e40af; margin: 0 0 12px; text-align: center;">&#128077; Human-in-the-Loop (thumbs up/down)</h5>
+<table>
+<tr style="border-bottom: 1px solid #bfdbfe;">
+  <td style="font-weight: 600; width: 30px; color: #6b7280;">01</td>
+  <td><strong>Brand Voice</strong><br><span style="font-size: 0.8em; color: #6b7280;">Preserved? (final comparison page)</span></td>
+</tr>
+<tr style="border-bottom: 1px solid #bfdbfe;">
+  <td style="font-weight: 600; color: #6b7280;">05</td>
+  <td><strong>Sentiment Alignment</strong><br><span style="font-size: 0.8em; color: #6b7280;">Score matches text? (&gt;85% pass)</span></td>
+</tr>
+<tr style="border-bottom: 1px solid #bfdbfe;">
+  <td style="font-weight: 600; color: #6b7280;">06</td>
+  <td><strong>Persona Faithfulness</strong><br><span style="font-size: 0.8em; color: #6b7280;">Sounds authentic? (&gt;75% pass)</span></td>
+</tr>
+<tr>
+  <td style="font-weight: 600; color: #6b7280;">07</td>
+  <td><strong>Optimization Faithfulness</strong><br><span style="font-size: 0.8em; color: #6b7280;">No hallucinated claims? (&gt;95% pass)</span></td>
+</tr>
+</table>
+<div style="margin-top: 10px; padding: 8px; background: #dbeafe; border-radius: 6px; font-size: 0.8em; text-align: center;">
+Embedded in workflow &mdash; testers vote while testing
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- In-app tracking row -->
+<div style="background: #fefce8; border: 2px solid #eab308; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+<h5 style="color: #a16207; margin: 0 0 10px; text-align: center;">&#128202; Behavioral Tracking (in-app, automatic)</h5>
+<div class="flex-row" style="gap: 32px;">
+  <div style="text-align: center;">
+    <strong style="color: #92400e;">03: Panel Removals</strong><br>
+    <span style="font-size: 0.8em; color: #6b7280;">Every persona removed at panel step<br>Pass: &lt;25% removal rate</span>
+  </div>
+  <div style="text-align: center;">
+    <strong style="color: #92400e;">04: Reaction Exclusions</strong><br>
+    <span style="font-size: 0.8em; color: #6b7280;">Every reaction excluded at R1 review<br>Pass: &lt;30% exclusion rate</span>
+  </div>
+</div>
+</div>
+
+<!-- Storage architecture -->
+<div class="flow-col">
+<div style="background: #f8fafc; border: 2px solid #94a3b8; border-radius: 10px; padding: 14px 20px; width: 520px;">
+  <div style="font-weight: 700; color: #475569; margin-bottom: 8px; text-align: center;">Storage &amp; Correlation</div>
+  <div class="flex-row" style="gap: 16px;">
+    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; text-align: center; flex: 1;">
+      <strong style="color: #475569;">SQLite eval.db</strong><br>
+      <span style="font-size: 0.8em; color: #6b7280;">Human votes, removals,<br>exclusions, automated metrics</span>
+    </div>
+    <div style="font-size: 1.5em; color: #94a3b8; display: flex; align-items: center;">&#8596;</div>
+    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; text-align: center; flex: 1;">
+      <strong style="color: #475569;">Langfuse</strong><br>
+      <span style="font-size: 0.8em; color: #6b7280;">Full LLM traces,<br>prompts, costs, latency</span>
+    </div>
+  </div>
+  <div style="text-align: center; margin-top: 8px; font-size: 0.8em; color: #64748b;">
+    Linked by <code style="background: #e2e8f0; padding: 1px 4px; border-radius: 3px;">trace_id</code> &mdash; find a bad eval vote, pull up the full LLM trace
+  </div>
+</div>
+</div>
+
+<div class="callout" style="background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; margin-top: 16px;">
+  <strong>API:</strong>
+  <code>POST /api/eval/log</code> (log any event) &middot;
+  <code>GET /api/eval/summary</code> (pass rates) &middot;
+  <code>GET /api/eval/events</code> (raw data) &middot;
+  <code>POST /api/eval/context-projection</code> (golden set test)
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM S12: Current System Architecture -->
+<!-- ============================================================ -->
+<div class="diagram" id="system-architecture">
+<div class="diagram-title" style="color: #1e40af;">MaplePulse &mdash; Current System Architecture</div>
+<div class="diagram-ref">Script Section 12 &mdash; Architecture Evolution</div>
+
+<div class="flex-row" style="gap: 20px; margin-bottom: 16px;">
+
+<!-- Frontend -->
+<div class="col-card">
+<div class="col-inner" style="background: #eff6ff; border-color: #3b82f6;">
+<h5 style="color: #1e40af;">Frontend (Next.js 15)</h5>
+<div class="col-row" style="border-bottom: 1px solid #bfdbfe;">Landing Page</div>
+<div class="col-row" style="border-bottom: 1px solid #bfdbfe;">Input Step (brief + filters)</div>
+<div class="col-row" style="border-bottom: 1px solid #bfdbfe;">Panel View (persona grid)</div>
+<div class="col-row" style="border-bottom: 1px solid #bfdbfe;">Reactions View (R1 + R2)</div>
+<div class="col-row" style="border-bottom: 1px solid #bfdbfe;">Summary View (metrics)</div>
+<div class="col-row" style="border-bottom: 1px solid #bfdbfe;">Optimization View</div>
+<div class="col-row" style="border-bottom: 1px solid #bfdbfe;">A/B Test + Survey Pre-test</div>
+<div class="col-row">Final Comparison (deltas)</div>
+<div class="col-footer">React 19 &middot; TypeScript &middot; Tailwind v4 &middot; SSE client</div>
+</div>
+</div>
+
+<!-- Backend -->
+<div class="col-card">
+<div class="col-inner" style="background: #f0fdf4; border-color: #22c55e;">
+<h5 style="color: #16a34a;">Backend (FastAPI)</h5>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/build-panel (agentic)</div>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/select-panel (filter)</div>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/run-with-panel (R1)</div>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/continue-after-review (R2)</div>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/focus-group (legacy full)</div>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/panel-options</div>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/feedback (Langfuse)</div>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/eval/log (eval events)</div>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/eval/summary (pass rates)</div>
+<div class="col-row" style="border-bottom: 1px solid #bbf7d0;">/api/eval/events (raw data)</div>
+<div class="col-row">/api/eval/context-projection</div>
+<div class="col-footer">LangGraph &middot; SSE streaming &middot; Pydantic</div>
+</div>
+</div>
+
+<!-- Data/Infra -->
+<div class="col-card">
+<div class="col-inner" style="background: #fefce8; border-color: #eab308;">
+<h5 style="color: #a16207;">Data & Infrastructure</h5>
+<div class="col-row" style="border-bottom: 1px solid #fde68a;">SQLite + FTS5 (persona DB)</div>
+<div class="col-row" style="border-bottom: 1px solid #fde68a;">5,000 seed personas (JSON)</div>
+<div class="col-row" style="border-bottom: 1px solid #fde68a;">Census 2021 weights (13 tables)</div>
+<div class="col-row" style="border-bottom: 1px solid #fde68a;">Job Bank 2025 wages (516 NOC)</div>
+<div class="col-row" style="border-bottom: 1px solid #fde68a;">OpenRouter (5 LLM models)</div>
+<div class="col-row" style="border-bottom: 1px solid #fde68a;">Langfuse (tracing + cost)</div>
+<div class="col-row" style="border-bottom: 1px solid #fde68a;">SQLite eval DB (10 eval types)</div>
+<div class="col-row">Docker Compose (3 services)</div>
+<div class="col-footer">Hetzner &middot; Nginx &middot; Let's Encrypt &middot; Cloudflare</div>
+</div>
+</div>
+
+</div>
+
+<!-- LLM Call Volume -->
+<div class="callout" style="background: #faf5ff; border: 1px solid #c084fc; color: #4b5563;">
+  <strong style="color: #7c3aed;">Per-run LLM calls:</strong>
+  ~3-5 (panel building) + 12 (R1 reactions: 1 per persona, model rotated) + 1 (optimizer) + 12 (R2 reactions) = <strong>~30 LLM calls per full run</strong>
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- DIAGRAM Summary: My Role vs. Claude Code's Role -->
+<!-- ============================================================ -->
+<div class="diagram" id="role-division">
+<div class="diagram-title" style="color: #1e40af;">What I Did vs. What Claude Code Did</div>
+<div class="diagram-ref">Script Summary &mdash; My Role vs. AI's Role</div>
+
+<div class="flex-row" style="gap: 20px;">
+
+<!-- My Role -->
+<div style="flex: 1; min-width: 320px; max-width: 420px;">
+<div style="background: #eff6ff; border: 2px solid #3b82f6; border-radius: 12px; padding: 16px;">
+<h5 style="color: #1e40af; margin: 0 0 12px; text-align: center;">&#129504; My Decisions &amp; Interventions</h5>
+<ul class="role-list">
+<li>Found and analyzed the reference project (Ask Singapore)</li>
+<li>Researched and structured 13 Census data categories</li>
+<li>Researched 30+ Canadian data sources</li>
+<li>Designed stratified persona generation strategy</li>
+<li>Identified flat persona problem, designed income enrichment pipeline</li>
+<li>Discovered CPI inflation gap, added 1.23 adjustment factor</li>
+<li>Identified sycophancy from performance logs</li>
+<li>Designed anchored scoring rubric (1-5 with descriptions)</li>
+<li>Decided on multi-model rotation for bias reduction</li>
+<li>Designed all prompts via meta prompting in OpenAI Playground</li>
+<li>Chose the agentic architecture (ReAct + tools)</li>
+<li>Designed context projection as a separate phase</li>
+<li>Designed 3-phase split workflow with human checkpoints</li>
+<li>Designed 10-eval framework (automated + human-in-the-loop) with pass criteria</li>
+<li>Made all technology choices (FastAPI, LangGraph, Next.js, OpenRouter, etc.)</li>
+<li>Directed code reviews (async refactor, tool use over JSON parsing)</li>
+<li>Used Langflow for visual trace analysis and optimization</li>
+<li>Made deployment decisions (Hetzner, Nginx, Docker volumes)</li>
+</ul>
+</div>
+</div>
+
+<!-- Claude's Role -->
+<div style="flex: 1; min-width: 320px; max-width: 420px;">
+<div style="background: #f5f3ff; border: 2px solid #8b5cf6; border-radius: 12px; padding: 16px;">
+<h5 style="color: #7c3aed; margin: 0 0 12px; text-align: center;">&#129302; Claude Code's Implementation</h5>
+<ul class="role-list">
+<li>Wrote the Python demographics module (536 lines)</li>
+<li>Wrote the persona generator (902 lines)</li>
+<li>Wrote the income enrichment script (291 lines)</li>
+<li>Built the LangGraph pipeline in Jupyter</li>
+<li>Wrote the FastAPI backend (1,424 lines)</li>
+<li>Wrote the agentic panel engine (2,131 lines)</li>
+<li>Built all 13 React components (~10K lines TSX)</li>
+<li>Wrote the SSE streaming client</li>
+<li>Implemented scoring rubric changes across frontend + backend</li>
+<li>Built eval infrastructure (SQLite storage, 4 API endpoints, EvalVote component)</li>
+<li>Built Docker Compose configs</li>
+<li>Wrote deployment scripts</li>
+<li>Implemented Langfuse integration</li>
+<li>Handled all refactoring (async, type safety, etc.)</li>
+</ul>
+</div>
+</div>
+
+</div>
+
+<div class="callout" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569;">
+  <strong>The pattern:</strong> I identified problems, designed solutions, chose technologies, crafted prompts, and directed architecture.<br>
+  Claude Code turned those decisions into working code &mdash; fast and reliably.<br>
+  The skill is knowing <em>what</em> to build and <em>when</em> to intervene, not typing the code yourself.
+</div>
+
+</div>
+
+</body>
+</html>

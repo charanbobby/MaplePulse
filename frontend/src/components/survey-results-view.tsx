@@ -94,8 +94,8 @@ function QuestionCard({ qs }: { qs: QuestionSummary }) {
 
       {/* Honesty rate */}
       <div className="flex items-center gap-2">
-        <label className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">
-          Would Answer Honestly
+        <label className="text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]" title="Percentage of respondents who feel this question allows them to give a truthful answer without being pushed toward a particular response">
+          Neutral Wording
         </label>
         <span
           className={`text-xs font-semibold ${qs.honest_pct >= 80 ? "text-emerald-600" : qs.honest_pct >= 60 ? "text-amber-600" : "text-red-600"}`}
@@ -143,21 +143,21 @@ function QuestionCard({ qs }: { qs: QuestionSummary }) {
         </details>
       )}
 
-      {/* Suggested improvements */}
+      {/* Suggested improvements — shown by default */}
       {qs.sample_improvements.length > 0 && (
-        <details>
-          <summary className="text-xs font-medium text-[var(--color-text-muted)] cursor-pointer select-none flex items-center gap-1">
+        <div>
+          <div className="text-xs font-medium text-[var(--color-text-muted)] flex items-center gap-1 mb-2">
             <MessageSquareWarning size={12} />
-            Suggested Improvements ({qs.sample_improvements.length})
-          </summary>
-          <div className="mt-2 space-y-1.5 pl-4 border-l-2 border-[var(--color-primary)]/30">
+            Suggested Improvements
+          </div>
+          <div className="space-y-1.5 pl-4 border-l-2 border-[var(--color-primary)]/30">
             {qs.sample_improvements.map((imp, i) => (
               <p key={i} className="text-xs text-[var(--color-text)]">
                 {imp}
               </p>
             ))}
           </div>
-        </details>
+        </div>
       )}
     </div>
   );
@@ -274,7 +274,7 @@ export function SurveyResultsView({
                         </span>
                         <span className="text-[var(--color-text)]">{qr.comprehension}</span>
                         {!qr.would_answer_honestly && (
-                          <span className="text-red-500 text-[10px] flex-shrink-0">(wouldn&apos;t answer honestly)</span>
+                          <span className="text-red-500 text-[10px] flex-shrink-0 border border-red-200 bg-red-50 px-1.5 py-0.5 rounded" title="This persona feels the question wording pushes them toward a particular answer">leading wording</span>
                         )}
                       </div>
                     ))}

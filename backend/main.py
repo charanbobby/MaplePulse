@@ -6,9 +6,11 @@ import re
 import random
 import time
 import asyncio
+import sqlite3
 from pathlib import Path
 from typing import Literal
 from collections import Counter
+from datetime import datetime, timezone
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -23,6 +25,8 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, START, END
 from langfuse import Langfuse
 from langfuse.langchain import CallbackHandler as _BaseLangfuseHandler
+
+APP_VERSION = "1.4.0"
 
 # ── Init ──────────────────────────────────────────────────────────────
 
@@ -39,7 +43,7 @@ app.add_middleware(
 )
 
 DEFAULT_MODEL = "openai/gpt-5.4-nano"
-OPTIMIZER_MODEL = "openai/gpt-5.4"
+OPTIMIZER_MODEL = "anthropic/claude-sonnet-4-6"
 REACTION_MODELS = [
     "openai/gpt-5.4-nano",
     "openai/gpt-5.4-mini",
@@ -341,10 +345,9 @@ Output:
 - Preserve all original characters exactly — including ampersands (&), symbols, and punctuation. Do not substitute & with "and" or any other replacement unless the original already uses the word.
 
 Content rules (STRICT):
-- EVERY claim in your output must trace back to the original message. Do not add new claims, features, benefits, body parts, use cases, or qualifying language not in the original.
-- Preserve brand names, product names, counts, prices, symbols (like &) exactly as written.
-- If a concern cannot be addressed without adding new information, leave that part of the message unchanged. Never invent or generalize beyond the source.
-- Keep roughly the same length (90%-110% of original character count). Prefer light-touch edits over rewrites.
+- Preserve brand names, product names, counts, prices, and symbols (like &) exactly as written.
+- You MAY rewrite substantially — restructure, reframe, add specificity, or change the angle entirely — as long as every claim still traces back to the original message or is a reasonable inference from it. Do not invent entirely new product features or benefits that have no basis in the original.
+- AIM to stay within ~50% of the original word count. Short messages (under 30 words) may need more expansion to add specificity, but resist the urge to balloon a punchy tagline into a paragraph. Longer messages should stay tight — trim, don't pad. If you're doubling the length, you're probably adding filler, not value.
 - Use Canadian spelling (colour, cheque, toque) where applicable. Do not add new brands or terms.
 - No disclaimers, legalese, meta-commentary, or references to the panel or feedback process.
 
@@ -353,7 +356,7 @@ Self-check before finalizing:
 - Will this score HIGHER on natural tone? If your rewrite sounds more corporate or cautious than the original, the answer is no — reconsider.
 - Will this score HIGHER on relevance? If you haven't reframed benefits toward what panelists actually cared about, the answer is no — reconsider.
 - Are brand names and symbols preserved exactly?
-- Is the character count within 90%-110% of the original?
+- If the original was generic or vague, did you make it SPECIFIC? Vague-to-specific is the single highest-impact optimization you can make.
 
 Process:
 - Identify what the panel LIKED (positive reactions, high sentiment comments) — preserve and amplify those elements.
@@ -541,6 +544,17 @@ async def run_focus_group(req: FocusGroupRequest):
                     for r in r1_removed
                 ],
             })
+            # EVAL-04: Log auto-exclusions
+            for r in r1_removed:
+                _eval_log("reaction_exclusion", trace_id=trace_id, persona_id=r.get("persona_id"), meta={
+                    "source": "auto",
+                    "reason": r.get("_filter_reason", "unknown"),
+                    "persona_summary": f"{r.get('age', '?')} {r.get('sex', '?')}, {r.get('occupation', '?')}",
+                    "reaction_text": r.get("reaction", ""),
+                    "sentiment_score": r.get("sentiment_score"),
+                    "relevance": r.get("relevance"),
+                    "model_used": r.get("model_used"),
+                })
 
         # ── Step 4: Round 1 Summary (filtered) ──
         yield _sse("step", {"step": "round1_summary", "status": "started"})
@@ -866,6 +880,142 @@ async def submit_feedback(req: FeedbackRequest):
     return {"status": "ok", "trace_id": req.trace_id, "value": req.value}
 
 
+# ── Eval Tracking ────────────────────────────────────────────────────
+
+EVAL_DB_PATH = Path("/app/db/eval.db")
+
+def _init_eval_db():
+    EVAL_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(EVAL_DB_PATH))
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS eval_events (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+            eval_type   TEXT NOT NULL,
+            trace_id    TEXT,
+            persona_id  TEXT,
+            tester_id   TEXT DEFAULT 'default',
+            vote        TEXT,
+            meta        TEXT
+        )
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_eval_type ON eval_events(eval_type)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_eval_trace ON eval_events(trace_id)")
+    conn.commit()
+    conn.close()
+
+_init_eval_db()
+
+
+def _eval_log(eval_type: str, trace_id: str | None = None, persona_id: str | None = None,
+              tester_id: str = "default", vote: str | None = None, meta: dict | None = None):
+    conn = sqlite3.connect(str(EVAL_DB_PATH))
+    conn.execute(
+        "INSERT INTO eval_events (eval_type, trace_id, persona_id, tester_id, vote, meta) VALUES (?, ?, ?, ?, ?, ?)",
+        (eval_type, trace_id, persona_id, tester_id, vote, json.dumps(meta) if meta else None),
+    )
+    conn.commit()
+    conn.close()
+
+
+class EvalLogRequest(BaseModel):
+    eval_type: str = Field(description="E.g. panel_removal, reaction_exclusion, brand_voice, sentiment_alignment, persona_faithfulness, optimization_faithfulness")
+    trace_id: str | None = None
+    persona_id: str | None = None
+    tester_id: str = "default"
+    vote: str | None = Field(None, description="thumbs_up, thumbs_down, or null for tracking events")
+    meta: dict | None = Field(None, description="Additional context (reaction text, scores, etc.)")
+
+
+@app.post("/api/eval/log")
+async def eval_log(req: EvalLogRequest):
+    _eval_log(req.eval_type, req.trace_id, req.persona_id, req.tester_id, req.vote, req.meta)
+    return {"status": "ok"}
+
+
+@app.get("/api/eval/summary")
+async def eval_summary():
+    conn = sqlite3.connect(str(EVAL_DB_PATH))
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Per-eval-type counts and thumbs up/down rates
+    rows = cur.execute("""
+        SELECT eval_type,
+               COUNT(*) as total,
+               SUM(CASE WHEN vote = 'thumbs_up' THEN 1 ELSE 0 END) as thumbs_up,
+               SUM(CASE WHEN vote = 'thumbs_down' THEN 1 ELSE 0 END) as thumbs_down
+        FROM eval_events
+        GROUP BY eval_type
+        ORDER BY eval_type
+    """).fetchall()
+
+    summary = {}
+    for r in rows:
+        total_votes = r["thumbs_up"] + r["thumbs_down"]
+        summary[r["eval_type"]] = {
+            "total_events": r["total"],
+            "thumbs_up": r["thumbs_up"],
+            "thumbs_down": r["thumbs_down"],
+            "pass_rate": round(r["thumbs_up"] / total_votes * 100, 1) if total_votes > 0 else None,
+        }
+
+    # EVAL-02: Length drift stats
+    length_rows = cur.execute("""
+        SELECT meta FROM eval_events WHERE eval_type = 'length_drift'
+    """).fetchall()
+    if length_rows:
+        ratios = []
+        for lr in length_rows:
+            m = json.loads(lr["meta"]) if lr["meta"] else {}
+            if "word_ratio" in m:
+                ratios.append(m["word_ratio"])
+        if ratios:
+            summary["length_drift"] = {
+                **summary.get("length_drift", {}),
+                "avg_word_ratio": round(sum(ratios) / len(ratios), 2),
+                "max_word_ratio": round(max(ratios), 2),
+                "over_threshold": sum(1 for r in ratios if r > 1.3),
+            }
+
+    # EVAL-08: Metrics improvement stats
+    improvement_rows = cur.execute("""
+        SELECT meta FROM eval_events WHERE eval_type = 'metrics_improvement'
+    """).fetchall()
+    if improvement_rows:
+        improved_count = 0
+        for ir in improvement_rows:
+            m = json.loads(ir["meta"]) if ir["meta"] else {}
+            if m.get("improved_metrics", 0) >= 2:
+                improved_count += 1
+        summary["metrics_improvement"] = {
+            **summary.get("metrics_improvement", {}),
+            "total_runs": len(improvement_rows),
+            "runs_improved": improved_count,
+            "improvement_rate": round(improved_count / len(improvement_rows) * 100, 1),
+        }
+
+    conn.close()
+    return summary
+
+
+@app.get("/api/eval/events")
+async def eval_events(eval_type: str | None = None, limit: int = 100):
+    conn = sqlite3.connect(str(EVAL_DB_PATH))
+    conn.row_factory = sqlite3.Row
+    if eval_type:
+        rows = conn.execute(
+            "SELECT * FROM eval_events WHERE eval_type = ? ORDER BY id DESC LIMIT ?",
+            (eval_type, limit),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM eval_events ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
 # ── Helpers ───────────────────────────────────────────────────────────
 
 def _serialize_persona(p: dict) -> dict:
@@ -953,6 +1103,17 @@ async def run_with_panel(req: RunWithPanelRequest):
                     for r in r1_removed
                 ],
             })
+            # EVAL-04: Log auto-exclusions
+            for r in r1_removed:
+                _eval_log("reaction_exclusion", trace_id=trace_id, persona_id=r.get("persona_id"), meta={
+                    "source": "auto",
+                    "reason": r.get("_filter_reason", "unknown"),
+                    "persona_summary": f"{r.get('age', '?')} {r.get('sex', '?')}, {r.get('occupation', '?')}",
+                    "reaction_text": r.get("reaction", ""),
+                    "sentiment_score": r.get("sentiment_score"),
+                    "relevance": r.get("relevance"),
+                    "model_used": r.get("model_used"),
+                })
 
         # ── Emit r1_complete — frontend pauses here for human review ──
         yield _sse("r1_complete", {
@@ -1001,6 +1162,23 @@ async def continue_after_review(req: ContinueAfterReviewRequest):
             "elapsed": round(time.time() - t0, 2),
         })
 
+        # ── EVAL-02: Length drift (tiered thresholds) ──
+        orig_words = len(req.message.split())
+        opt_words = len(optimized["improved_message"].split())
+        word_ratio = round(opt_words / orig_words, 2) if orig_words > 0 else 0
+        # Short copy needs room to expand; long copy should stay tight
+        if orig_words < 30:
+            drift_threshold = 2.0
+        elif orig_words < 75:
+            drift_threshold = 1.5
+        else:
+            drift_threshold = 1.3
+        _eval_log("length_drift", trace_id=trace_id, meta={
+            "original_words": orig_words, "optimized_words": opt_words,
+            "word_ratio": word_ratio, "threshold": drift_threshold,
+            "over_threshold": word_ratio > drift_threshold,
+        })
+
         # ── Round 2 Reactions ──
         yield _sse("step", {"step": "round2_responding", "status": "started"})
         t0 = time.time()
@@ -1018,6 +1196,26 @@ async def continue_after_review(req: ContinueAfterReviewRequest):
         yield _sse("step", {"step": "round2_summary", "status": "started"})
         r2_agg = _aggregate(r2_results)
         yield _sse("summary_r2", {**r2_agg, "elapsed": r2_elapsed})
+
+        # ── EVAL-08: Metrics improvement ──
+        improved_metrics = 0
+        sentiment_delta = r2_agg["avg_sentiment"] - r1_agg["avg_sentiment"]
+        relevance_delta = r2_agg["relevance_pct"] - r1_agg["relevance_pct"]
+        natural_delta = (r2_agg["tone_distribution"].get("natural", 0)
+                         - r1_agg["tone_distribution"].get("natural", 0))
+        if sentiment_delta > 0:
+            improved_metrics += 1
+        if relevance_delta > 0:
+            improved_metrics += 1
+        if natural_delta > 0:
+            improved_metrics += 1
+        _eval_log("metrics_improvement", trace_id=trace_id, meta={
+            "sentiment_delta": round(sentiment_delta, 2),
+            "relevance_delta": round(relevance_delta, 2),
+            "natural_tone_delta": round(natural_delta, 2),
+            "improved_metrics": improved_metrics,
+            "verdict": "improved" if improved_metrics >= 2 else "mixed" if improved_metrics == 1 else "regressed",
+        })
 
         # ── Done ──
         yield _sse("done", {"trace_id": trace_id})
@@ -1159,6 +1357,18 @@ async def run_ab_test(req: ABTestRequest):
             "winner_label": chr(65 + winner_idx),
             "total_respondents": len(valid),
             "elapsed": elapsed,
+        })
+
+        # ── EVAL-09: A/B position bias logging ──
+        variant_order = [v[:80] for v in variants]
+        pref_distribution = {chr(65 + i): vs["preference_count"] for i, vs in enumerate(variant_summaries)}
+        _eval_log("ab_position_bias", trace_id=trace_id, meta={
+            "variant_order": variant_order,
+            "num_variants": num_variants,
+            "preference_distribution": pref_distribution,
+            "winner_index": winner_idx,
+            "winner_label": chr(65 + winner_idx),
+            "total_respondents": len(valid),
         })
 
         yield _sse("done", {"trace_id": trace_id})
@@ -1398,6 +1608,99 @@ async def build_panel(req: BuildPanelRequest):
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
+# ── EVAL-10: Context Projection Golden Set Test ──────────────────────
+
+from panel_engine import determine_relevant_attributes
+
+class ContextProjectionTestCase(BaseModel):
+    audience_brief: str
+    content: str = "Test marketing message"
+    use_case: str = "localization"
+    expected_groups: list[str] = Field(default_factory=list)
+    expected_extended_keys: list[str] = Field(default_factory=list)
+
+class ContextProjectionTestRequest(BaseModel):
+    test_cases: list[ContextProjectionTestCase] | None = None
+
+
+GOLDEN_SET = [
+    {"brief": "Muslim families shopping for halal groceries", "groups": ["core", "identity", "lifestyle"], "keys": ["religion", "cultural_background", "hobbies_and_interests"]},
+    {"brief": "First-time homebuyers in GTA, ages 25-35", "groups": ["core", "housing", "financial"], "keys": ["housing", "commute_mode"]},
+    {"brief": "Conservative voters concerned about carbon tax", "groups": ["core", "political"], "keys": ["political_leaning", "top_concerns"]},
+    {"brief": "New immigrants from South Asia settling in BC", "groups": ["core", "identity", "housing", "lifestyle"], "keys": ["immigration_status", "cultural_background", "religion", "housing"]},
+    {"brief": "Tech workers interested in remote work tools", "groups": ["core", "digital", "lifestyle"], "keys": ["hobbies_and_interests"]},
+    {"brief": "Parents choosing after-school programs", "groups": ["core", "lifestyle", "values"], "keys": ["hobbies_and_interests"]},
+    {"brief": "Seniors on fixed income comparing pharmacy options", "groups": ["core", "health", "financial"], "keys": []},
+]
+
+
+@app.post("/api/eval/context-projection")
+async def eval_context_projection(req: ContextProjectionTestRequest | None = None):
+    """Run context projection against golden set or custom test cases."""
+    model = build_model(model_name=DEFAULT_MODEL, temperature=0)
+
+    cases = []
+    if req and req.test_cases:
+        cases = [{"brief": tc.audience_brief, "content": tc.content, "use_case": tc.use_case,
+                   "groups": tc.expected_groups, "keys": tc.expected_extended_keys} for tc in req.test_cases]
+    else:
+        cases = GOLDEN_SET
+
+    results = []
+    for case in cases:
+        projection = determine_relevant_attributes(
+            use_case=case.get("use_case", "localization"),
+            audience_brief=case["brief"],
+            content=case.get("content", "Test marketing message"),
+            model=model,
+        )
+        actual_groups = set(projection.relevant_groups)
+        expected_groups = set(case["groups"])
+        actual_keys = set(projection.relevant_extended_keys)
+        expected_keys = set(case["keys"])
+
+        # Group precision/recall
+        group_tp = len(actual_groups & expected_groups)
+        group_precision = round(group_tp / len(actual_groups) * 100) if actual_groups else 0
+        group_recall = round(group_tp / len(expected_groups) * 100) if expected_groups else 100
+
+        # Key precision/recall
+        key_tp = len(actual_keys & expected_keys)
+        key_precision = round(key_tp / len(actual_keys) * 100) if actual_keys else 0
+        key_recall = round(key_tp / len(expected_keys) * 100) if expected_keys else 100
+
+        result = {
+            "brief": case["brief"],
+            "expected_groups": sorted(expected_groups),
+            "actual_groups": sorted(actual_groups),
+            "group_precision": group_precision,
+            "group_recall": group_recall,
+            "missing_groups": sorted(expected_groups - actual_groups),
+            "extra_groups": sorted(actual_groups - expected_groups),
+            "expected_keys": sorted(expected_keys),
+            "actual_keys": sorted(actual_keys),
+            "key_precision": key_precision,
+            "key_recall": key_recall,
+            "reasoning": projection.reasoning,
+        }
+        results.append(result)
+
+        _eval_log("context_projection", meta={
+            "brief": case["brief"], "group_precision": group_precision,
+            "group_recall": group_recall, "key_recall": key_recall,
+        })
+
+    avg_group_recall = round(sum(r["group_recall"] for r in results) / len(results), 1) if results else 0
+    avg_group_precision = round(sum(r["group_precision"] for r in results) / len(results), 1) if results else 0
+
+    return {
+        "results": results,
+        "avg_group_recall": avg_group_recall,
+        "avg_group_precision": avg_group_precision,
+        "pass": avg_group_recall >= 80 and avg_group_precision >= 70,
+    }
+
+
 # ── Health Check ──────────────────────────────────────────────────────
 
 @app.get("/health")
@@ -1413,6 +1716,7 @@ async def health():
 
     return {
         "status": "ok",
+        "version": APP_VERSION,
         "personas": len(ALL_PERSONAS),
         "persona_db": db_stats,
         "llm_cache": cache_stats,

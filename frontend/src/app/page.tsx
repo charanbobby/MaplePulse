@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
 import { AlertCircle, Users } from "lucide-react";
 import type {
@@ -16,7 +16,8 @@ import type {
   SurveyReaction,
   SurveySummary,
 } from "@/lib/types";
-import { runBuildPanel, selectPanel, runWithPanel, continueAfterReview, runABTest, runSurveyPreTest } from "@/lib/api";
+import { runBuildPanel, selectPanel, runWithPanel, continueAfterReview, runABTest, runSurveyPreTest, logEval } from "@/lib/api";
+import { EvalVote } from "@/components/eval-vote";
 import { WorkflowStepper } from "@/components/workflow-stepper";
 import { InputStep } from "@/components/input-step";
 import { PanelView } from "@/components/panel-view";
@@ -86,6 +87,13 @@ export default function Home() {
   const [r1RawReactions, setR1RawReactions] = useState<any[]>([]);
   const r1RawReactionsRef = useRef<any[]>([]);
   const [excludedPersonaIds, setExcludedPersonaIds] = useState<Set<string>>(new Set());
+
+  // App version (fetched from backend /health)
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+    fetch(`${url}/health`).then(r => r.json()).then(d => setAppVersion(d.version)).catch(() => {});
+  }, []);
 
   // Agentic panel build metadata (shown when audience brief was used)
   const [audienceSpec, setAudienceSpec] = useState<Record<string, unknown> | null>(null);
@@ -556,9 +564,23 @@ export default function Home() {
   };
 
   const handleRemovePersona = (uuid: string) => {
+    const removed = panelRef.current.find((p) => p.uuid === uuid);
     const updated = panelRef.current.filter((p) => p.uuid !== uuid);
     panelRef.current = updated;
     setPanel([...updated]);
+
+    // EVAL-03: Panel selection stability
+    if (removed) {
+      logEval("panel_removal", {
+        traceId: traceId || undefined,
+        personaId: uuid,
+        meta: {
+          persona_summary: `${removed.age} ${removed.sex}, ${removed.occupation}, ${removed.province}`,
+          panel_size_before: updated.length + 1,
+          panel_size_after: updated.length,
+        },
+      });
+    }
   };
 
   const handleRestart = () => {
@@ -593,6 +615,9 @@ export default function Home() {
               <span className="text-xl font-bold tracking-tight" style={{ color: "#C1272D" }}>Maple</span>
               <span className="text-xl font-bold tracking-tight" style={{ color: "#1B7B7E" }}>Pulse</span>
             </div>
+            {appVersion && (
+              <span className="text-[10px] text-[var(--color-text-muted)] ml-1 self-end mb-0.5">v{appVersion}</span>
+            )}
             {isRunning && (
               <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] ml-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-pulse" />
@@ -712,11 +737,18 @@ export default function Home() {
                 isReady={ready.round1_done}
                 message={message}
                 continueLabel="Review Reactions"
+                traceId={traceId || undefined}
               />
             )}
 
             {step === "round1_review" && ready.round1_done && (
               <div className="space-y-3">
+                {/* Original message */}
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
+                  <p className="text-[10px] uppercase tracking-wide text-[var(--color-text-light)] mb-1">Original Message</p>
+                  <p className="text-sm text-[var(--color-text)] whitespace-pre-wrap">{message}</p>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-base font-semibold">
@@ -754,6 +786,7 @@ export default function Home() {
                       >
                         <button
                           onClick={() => {
+                            const wasExcluded = excludedPersonaIds.has(r.persona.uuid);
                             setExcludedPersonaIds((prev) => {
                               const next = new Set(prev);
                               if (next.has(r.persona.uuid)) {
@@ -763,6 +796,22 @@ export default function Home() {
                               }
                               return next;
                             });
+                            // EVAL-04: Reaction removal rate
+                            if (!wasExcluded) {
+                              logEval("reaction_exclusion", {
+                                traceId: traceId || undefined,
+                                personaId: r.persona.uuid,
+                                meta: {
+                                  source: "manual",
+                                  persona_summary: `${r.persona.age} ${r.persona.sex}, ${r.persona.occupation}`,
+                                  reaction_text: r.reaction,
+                                  sentiment_score: r.sentiment_score,
+                                  tone_fit: r.tone_fit,
+                                  relevance: r.relevance,
+                                  model_used: r.model_used,
+                                },
+                              });
+                            }
                           }}
                           className="absolute top-2.5 right-2.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors cursor-pointer"
                           style={{
@@ -786,6 +835,24 @@ export default function Home() {
                           <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-muted)]">
                             <span>{r.sentiment_score}/5</span>
                             <span>{r.tone_fit}</span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-dashed border-[var(--color-border)]">
+                            <EvalVote
+                              evalType="sentiment_alignment"
+                              label="Score match?"
+                              compact
+                              traceId={traceId || undefined}
+                              personaId={r.persona.uuid}
+                              meta={{ reaction_text: r.reaction, sentiment_score: r.sentiment_score, model_used: r.model_used }}
+                            />
+                            <EvalVote
+                              evalType="persona_faithfulness"
+                              label="Authentic?"
+                              compact
+                              traceId={traceId || undefined}
+                              personaId={r.persona.uuid}
+                              meta={{ reaction_text: r.reaction, persona_summary: `${r.persona.age} ${r.persona.sex}, ${r.persona.occupation}, ${r.persona.province}`, model_used: r.model_used }}
+                            />
                           </div>
                         </div>
                       </div>
@@ -828,6 +895,7 @@ export default function Home() {
                 isReady={ready.round2_summary}
                 message={optimized?.improved_message ?? message}
                 round1Reactions={round1Reactions}
+                traceId={traceId || undefined}
               />
             )}
 

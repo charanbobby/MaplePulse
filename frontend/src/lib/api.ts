@@ -64,6 +64,47 @@ export async function runBuildPanel(
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let currentEvent = "";
+    let currentData = "";
+
+    const processLine = (line: string) => {
+      if (line.startsWith("event: ")) {
+        currentEvent = line.slice(7).trim();
+      } else if (line.startsWith("data: ")) {
+        currentData = line.slice(6);
+      } else if (line === "" && currentEvent && currentData) {
+        try {
+          const data = JSON.parse(currentData);
+          switch (currentEvent) {
+            case "audience_spec":
+              callbacks.onAudienceSpec(data);
+              break;
+            case "context_projection":
+              callbacks.onContextProjection(data);
+              break;
+            case "panel":
+              callbacks.onPanel(data);
+              break;
+            case "panel_metadata":
+              callbacks.onPanelMetadata(data);
+              break;
+            case "agent_log":
+              callbacks.onAgentLog(data);
+              break;
+            case "done":
+              callbacks.onDone(data);
+              break;
+            case "error":
+              callbacks.onError(data.message || "Unknown error");
+              break;
+          }
+        } catch {
+          // Skip malformed JSON
+        }
+        currentEvent = "";
+        currentData = "";
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -72,48 +113,11 @@ export async function runBuildPanel(
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
-
-      let currentEvent = "";
-      let currentData = "";
-
-      for (const line of lines) {
-        if (line.startsWith("event: ")) {
-          currentEvent = line.slice(7).trim();
-        } else if (line.startsWith("data: ")) {
-          currentData = line.slice(6);
-        } else if (line === "" && currentEvent && currentData) {
-          try {
-            const data = JSON.parse(currentData);
-            switch (currentEvent) {
-              case "audience_spec":
-                callbacks.onAudienceSpec(data);
-                break;
-              case "context_projection":
-                callbacks.onContextProjection(data);
-                break;
-              case "panel":
-                callbacks.onPanel(data);
-                break;
-              case "panel_metadata":
-                callbacks.onPanelMetadata(data);
-                break;
-              case "agent_log":
-                callbacks.onAgentLog(data);
-                break;
-              case "done":
-                callbacks.onDone(data);
-                break;
-              case "error":
-                callbacks.onError(data.message || "Unknown error");
-                break;
-            }
-          } catch {
-            // Skip malformed JSON
-          }
-          currentEvent = "";
-          currentData = "";
-        }
-      }
+      for (const line of lines) processLine(line);
+    }
+    // Process any remaining buffer after stream ends
+    if (buffer) {
+      for (const line of buffer.split("\n")) processLine(line);
     }
   } catch (err) {
     callbacks.onError(`Connection error: ${err instanceof Error ? err.message : String(err)}`);
@@ -195,6 +199,38 @@ export async function runWithPanel(
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let currentEvent = "";
+    let currentData = "";
+
+    const processLine = (line: string) => {
+      if (line.startsWith("event: ")) {
+        currentEvent = line.slice(7).trim();
+      } else if (line.startsWith("data: ")) {
+        currentData = line.slice(6);
+      } else if (line === "" && currentEvent && currentData) {
+        try {
+          const data = JSON.parse(currentData);
+          switch (currentEvent) {
+            case "reaction_r1":
+              callbacks.onReactionR1(data);
+              break;
+            case "reactions_filtered":
+              callbacks.onReactionsFiltered?.(data);
+              break;
+            case "r1_complete":
+              callbacks.onR1Complete(data);
+              break;
+            case "error":
+              callbacks.onError(data.message || "Unknown error");
+              break;
+          }
+        } catch {
+          // Skip malformed JSON
+        }
+        currentEvent = "";
+        currentData = "";
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -203,39 +239,10 @@ export async function runWithPanel(
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
-
-      let currentEvent = "";
-      let currentData = "";
-
-      for (const line of lines) {
-        if (line.startsWith("event: ")) {
-          currentEvent = line.slice(7).trim();
-        } else if (line.startsWith("data: ")) {
-          currentData = line.slice(6);
-        } else if (line === "" && currentEvent && currentData) {
-          try {
-            const data = JSON.parse(currentData);
-            switch (currentEvent) {
-              case "reaction_r1":
-                callbacks.onReactionR1(data);
-                break;
-              case "reactions_filtered":
-                callbacks.onReactionsFiltered?.(data);
-                break;
-              case "r1_complete":
-                callbacks.onR1Complete(data);
-                break;
-              case "error":
-                callbacks.onError(data.message || "Unknown error");
-                break;
-            }
-          } catch {
-            // Skip malformed JSON
-          }
-          currentEvent = "";
-          currentData = "";
-        }
-      }
+      for (const line of lines) processLine(line);
+    }
+    if (buffer) {
+      for (const line of buffer.split("\n")) processLine(line);
     }
   } catch (err) {
     callbacks.onError(`Connection error: ${err instanceof Error ? err.message : String(err)}`);
@@ -276,6 +283,44 @@ export async function continueAfterReview(
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let currentEvent = "";
+    let currentData = "";
+
+    const processLine = (line: string) => {
+      if (line.startsWith("event: ")) {
+        currentEvent = line.slice(7).trim();
+      } else if (line.startsWith("data: ")) {
+        currentData = line.slice(6);
+      } else if (line === "" && currentEvent && currentData) {
+        try {
+          const data = JSON.parse(currentData);
+          switch (currentEvent) {
+            case "summary_r1":
+              callbacks.onSummaryR1(data);
+              break;
+            case "optimized":
+              callbacks.onOptimized(data);
+              break;
+            case "reaction_r2":
+              callbacks.onReactionR2(data);
+              break;
+            case "summary_r2":
+              callbacks.onSummaryR2(data);
+              break;
+            case "done":
+              callbacks.onDone(data);
+              break;
+            case "error":
+              callbacks.onError(data.message || "Unknown error");
+              break;
+          }
+        } catch {
+          // Skip malformed JSON
+        }
+        currentEvent = "";
+        currentData = "";
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -284,45 +329,10 @@ export async function continueAfterReview(
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
-
-      let currentEvent = "";
-      let currentData = "";
-
-      for (const line of lines) {
-        if (line.startsWith("event: ")) {
-          currentEvent = line.slice(7).trim();
-        } else if (line.startsWith("data: ")) {
-          currentData = line.slice(6);
-        } else if (line === "" && currentEvent && currentData) {
-          try {
-            const data = JSON.parse(currentData);
-            switch (currentEvent) {
-              case "summary_r1":
-                callbacks.onSummaryR1(data);
-                break;
-              case "optimized":
-                callbacks.onOptimized(data);
-                break;
-              case "reaction_r2":
-                callbacks.onReactionR2(data);
-                break;
-              case "summary_r2":
-                callbacks.onSummaryR2(data);
-                break;
-              case "done":
-                callbacks.onDone(data);
-                break;
-              case "error":
-                callbacks.onError(data.message || "Unknown error");
-                break;
-            }
-          } catch {
-            // Skip malformed JSON
-          }
-          currentEvent = "";
-          currentData = "";
-        }
-      }
+      for (const line of lines) processLine(line);
+    }
+    if (buffer) {
+      for (const line of buffer.split("\n")) processLine(line);
     }
   } catch (err) {
     callbacks.onError(`Connection error: ${err instanceof Error ? err.message : String(err)}`);
@@ -365,6 +375,41 @@ export async function runABTest(
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let currentEvent = "";
+    let currentData = "";
+
+    const processLine = (line: string) => {
+      if (line.startsWith("event: ")) {
+        currentEvent = line.slice(7).trim();
+      } else if (line.startsWith("data: ")) {
+        currentData = line.slice(6);
+      } else if (line === "" && currentEvent && currentData) {
+        try {
+          const data = JSON.parse(currentData);
+          switch (currentEvent) {
+            case "trace":
+              callbacks.onTrace(data);
+              break;
+            case "ab_reaction":
+              callbacks.onABReaction(data);
+              break;
+            case "ab_summary":
+              callbacks.onABSummary(data);
+              break;
+            case "done":
+              callbacks.onDone(data);
+              break;
+            case "error":
+              callbacks.onError(data.message || "Unknown error");
+              break;
+          }
+        } catch {
+          // Skip malformed JSON
+        }
+        currentEvent = "";
+        currentData = "";
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -373,42 +418,10 @@ export async function runABTest(
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
-
-      let currentEvent = "";
-      let currentData = "";
-
-      for (const line of lines) {
-        if (line.startsWith("event: ")) {
-          currentEvent = line.slice(7).trim();
-        } else if (line.startsWith("data: ")) {
-          currentData = line.slice(6);
-        } else if (line === "" && currentEvent && currentData) {
-          try {
-            const data = JSON.parse(currentData);
-            switch (currentEvent) {
-              case "trace":
-                callbacks.onTrace(data);
-                break;
-              case "ab_reaction":
-                callbacks.onABReaction(data);
-                break;
-              case "ab_summary":
-                callbacks.onABSummary(data);
-                break;
-              case "done":
-                callbacks.onDone(data);
-                break;
-              case "error":
-                callbacks.onError(data.message || "Unknown error");
-                break;
-            }
-          } catch {
-            // Skip malformed JSON
-          }
-          currentEvent = "";
-          currentData = "";
-        }
-      }
+      for (const line of lines) processLine(line);
+    }
+    if (buffer) {
+      for (const line of buffer.split("\n")) processLine(line);
     }
   } catch (err) {
     callbacks.onError(`Connection error: ${err instanceof Error ? err.message : String(err)}`);
@@ -451,6 +464,41 @@ export async function runSurveyPreTest(
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let currentEvent = "";
+    let currentData = "";
+
+    const processLine = (line: string) => {
+      if (line.startsWith("event: ")) {
+        currentEvent = line.slice(7).trim();
+      } else if (line.startsWith("data: ")) {
+        currentData = line.slice(6);
+      } else if (line === "" && currentEvent && currentData) {
+        try {
+          const data = JSON.parse(currentData);
+          switch (currentEvent) {
+            case "trace":
+              callbacks.onTrace(data);
+              break;
+            case "survey_reaction":
+              callbacks.onSurveyReaction(data);
+              break;
+            case "survey_summary":
+              callbacks.onSurveySummary(data);
+              break;
+            case "done":
+              callbacks.onDone(data);
+              break;
+            case "error":
+              callbacks.onError(data.message || "Unknown error");
+              break;
+          }
+        } catch {
+          // Skip malformed JSON
+        }
+        currentEvent = "";
+        currentData = "";
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
@@ -459,46 +507,40 @@ export async function runSurveyPreTest(
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
-
-      let currentEvent = "";
-      let currentData = "";
-
-      for (const line of lines) {
-        if (line.startsWith("event: ")) {
-          currentEvent = line.slice(7).trim();
-        } else if (line.startsWith("data: ")) {
-          currentData = line.slice(6);
-        } else if (line === "" && currentEvent && currentData) {
-          try {
-            const data = JSON.parse(currentData);
-            switch (currentEvent) {
-              case "trace":
-                callbacks.onTrace(data);
-                break;
-              case "survey_reaction":
-                callbacks.onSurveyReaction(data);
-                break;
-              case "survey_summary":
-                callbacks.onSurveySummary(data);
-                break;
-              case "done":
-                callbacks.onDone(data);
-                break;
-              case "error":
-                callbacks.onError(data.message || "Unknown error");
-                break;
-            }
-          } catch {
-            // Skip malformed JSON
-          }
-          currentEvent = "";
-          currentData = "";
-        }
-      }
+      for (const line of lines) processLine(line);
+    }
+    if (buffer) {
+      for (const line of buffer.split("\n")) processLine(line);
     }
   } catch (err) {
     callbacks.onError(`Connection error: ${err instanceof Error ? err.message : String(err)}`);
   }
+}
+
+// ── Eval Tracking ───────────────────────────────────────────────────
+
+export async function logEval(
+  evalType: string,
+  opts: {
+    traceId?: string;
+    personaId?: string;
+    testerId?: string;
+    vote?: "thumbs_up" | "thumbs_down";
+    meta?: Record<string, unknown>;
+  } = {},
+): Promise<void> {
+  await fetch(`${BACKEND_URL}/api/eval/log`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      eval_type: evalType,
+      trace_id: opts.traceId,
+      persona_id: opts.personaId,
+      tester_id: opts.testerId || "default",
+      vote: opts.vote,
+      meta: opts.meta,
+    }),
+  });
 }
 
 // ── Feedback ────────────────────────────────────────────────────────
@@ -558,65 +600,65 @@ export async function runFocusGroup(
 
     const decoder = new TextDecoder();
     let buffer = "";
+    let currentEvent = "";
+    let currentData = "";
+
+    const processLine = (line: string) => {
+      if (line.startsWith("event: ")) {
+        currentEvent = line.slice(7).trim();
+      } else if (line.startsWith("data: ")) {
+        currentData = line.slice(6);
+      } else if (line === "" && currentEvent && currentData) {
+        try {
+          const data = JSON.parse(currentData);
+          switch (currentEvent) {
+            case "step":
+              callbacks.onStep(data);
+              break;
+            case "classify":
+              callbacks.onClassify(data);
+              break;
+            case "panel":
+              callbacks.onPanel(data);
+              break;
+            case "reaction_r1":
+              callbacks.onReactionR1(data);
+              break;
+            case "summary_r1":
+              callbacks.onSummaryR1(data);
+              break;
+            case "optimized":
+              callbacks.onOptimized(data);
+              break;
+            case "reaction_r2":
+              callbacks.onReactionR2(data);
+              break;
+            case "summary_r2":
+              callbacks.onSummaryR2(data);
+              break;
+            case "done":
+              callbacks.onDone(data);
+              break;
+          }
+        } catch {
+          // Skip malformed JSON
+        }
+        currentEvent = "";
+        currentData = "";
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-
-      // Parse SSE events from buffer
       const lines = buffer.split("\n");
-      buffer = lines.pop() || ""; // keep incomplete line in buffer
-
-      let currentEvent = "";
-      let currentData = "";
-
-      for (const line of lines) {
-        if (line.startsWith("event: ")) {
-          currentEvent = line.slice(7).trim();
-        } else if (line.startsWith("data: ")) {
-          currentData = line.slice(6);
-        } else if (line === "" && currentEvent && currentData) {
-          // Complete event
-          try {
-            const data = JSON.parse(currentData);
-            switch (currentEvent) {
-              case "step":
-                callbacks.onStep(data);
-                break;
-              case "classify":
-                callbacks.onClassify(data);
-                break;
-              case "panel":
-                callbacks.onPanel(data);
-                break;
-              case "reaction_r1":
-                callbacks.onReactionR1(data);
-                break;
-              case "summary_r1":
-                callbacks.onSummaryR1(data);
-                break;
-              case "optimized":
-                callbacks.onOptimized(data);
-                break;
-              case "reaction_r2":
-                callbacks.onReactionR2(data);
-                break;
-              case "summary_r2":
-                callbacks.onSummaryR2(data);
-                break;
-              case "done":
-                callbacks.onDone(data);
-                break;
-            }
-          } catch {
-            // Skip malformed JSON
-          }
-          currentEvent = "";
-          currentData = "";
-        }
-      }
+      buffer = lines.pop() || "";
+      for (const line of lines) processLine(line);
+    }
+    if (buffer) {
+      for (const line of buffer.split("\n")) processLine(line);
     }
   } catch (err) {
     callbacks.onError(`Connection error: ${err instanceof Error ? err.message : String(err)}`);

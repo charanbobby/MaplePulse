@@ -16,6 +16,8 @@ interface ReactionsViewProps {
   round1Reactions?: Reaction[];
   /** Custom label for the continue button */
   continueLabel?: string;
+  /** Langfuse trace ID for eval correlation */
+  traceId?: string;
 }
 
 export function ReactionsView({
@@ -27,6 +29,7 @@ export function ReactionsView({
   message,
   round1Reactions,
   continueLabel,
+  traceId,
 }: ReactionsViewProps) {
   const allDone = isReady || respondingIndex >= reactions.length;
 
@@ -86,6 +89,8 @@ export function ReactionsView({
             round1Reaction={
               round1Reactions?.find((r1) => r1.persona.uuid === r.persona.uuid)
             }
+            round={round}
+            traceId={traceId}
           />
         ))}
       </div>

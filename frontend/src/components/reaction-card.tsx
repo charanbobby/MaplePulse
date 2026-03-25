@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { Reaction } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { EvalVote } from "./eval-vote";
 
 function SentimentBadge({ score }: { score: number }) {
   const color =
@@ -44,6 +45,10 @@ interface ReactionCardProps {
   isResponding: boolean;
   /** The same persona's Round 1 reaction, shown for context in Round 2 */
   round1Reaction?: Reaction;
+  /** Which round this card belongs to — used for eval tagging */
+  round?: 1 | 2;
+  /** Langfuse trace ID for eval correlation */
+  traceId?: string;
 }
 
 export function ReactionCard({
@@ -52,6 +57,8 @@ export function ReactionCard({
   isActive,
   isResponding,
   round1Reaction,
+  round,
+  traceId,
 }: ReactionCardProps) {
   const { persona, reaction: text, sentiment_score, relevance, tone_fit, cultural_flags } = reaction;
 
@@ -139,6 +146,28 @@ export function ReactionCard({
               {flag}
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Eval voting */}
+      {!isResponding && traceId && (
+        <div className="px-3 py-1.5 border-t border-dashed border-[var(--color-border)] flex items-center gap-3">
+          <EvalVote
+            evalType="sentiment_alignment"
+            label="Score match?"
+            compact
+            traceId={traceId}
+            personaId={persona.uuid}
+            meta={{ reaction_text: text, sentiment_score, model_used: reaction.model_used, round: round || 1 }}
+          />
+          <EvalVote
+            evalType="persona_faithfulness"
+            label="Authentic?"
+            compact
+            traceId={traceId}
+            personaId={persona.uuid}
+            meta={{ reaction_text: text, persona_summary: `${persona.age} ${persona.sex}, ${persona.occupation}, ${persona.province}`, model_used: reaction.model_used, round: round || 1 }}
+          />
         </div>
       )}
     </div>

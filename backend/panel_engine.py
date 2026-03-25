@@ -329,6 +329,12 @@ IMPORTANT:
   here — those belong in lifestyle or behavioral_traits.
 - When the brief involves a PURCHASE (buying, shopping, considering), infer a realistic income_range
   even if not explicitly stated. Condo buyers need $60K+, luxury car buyers need $100K+, etc.
+- When the brief mentions SPENDING LEVEL or LIFESTYLE SIGNALS (e.g. "mid spenders", "luxury lovers",
+  "budget-conscious", "high-income", "affluent"), ALWAYS map these to an income_range:
+  - "budget-conscious" / "low income" / "cost-conscious" → {min: 0, max: 40000}
+  - "mid spenders" / "middle class" / "moderate income" → {min: 40000, max: 80000}
+  - "affluent" / "luxury" / "high spenders" / "premium" → {min: 80000, max: 200000}
+  Adjust based on context (e.g. "luxury lovers" who are "mid spenders" → {min: 50000, max: 100000}).
 - When a brief mentions a BRAND, RETAILER, or COMPANY, use your knowledge of that brand's typical
   customer to infer demographics. Think about who actually shops there:
   - Age range (e.g. IKEA skews 20-40, Costco skews 35-65)
@@ -402,6 +408,11 @@ Examples:
     lifestyle: ["budget-conscious family", "value shopper"],
     domain: "retail / general merchandise + grocery",
     behavioral_traits: ["price-sensitive", "convenience-driven"]
+
+- "French Canadians in Quebec and New Brunswick, culturally proud, mid spenders, luxury lovers"
+  → provinces: ["Quebec", "New Brunswick"], income_range: {min: 50000, max: 100000},
+    values: ["culturally proud", "French-Canadian identity"], lifestyle: ["luxury-oriented", "mid spender"],
+    behavioral_traits: ["brand-conscious", "quality-over-quantity"]
 
 IMPORTANT: When a brief references a cultural holiday, tradition, cuisine, or festival:
 1. Set holiday_or_festival to the CANONICAL name from the valid values list (normalize alternate
